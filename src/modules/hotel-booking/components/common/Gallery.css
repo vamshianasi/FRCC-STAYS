@@ -1,0 +1,96 @@
+.gallery-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.chip {
+  border: 1px solid var(--border);
+  background: var(--white);
+  border-radius: var(--radius-chip);
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.chip:hover { border-color: var(--gold); color: var(--navy); }
+.chip-active {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+}
+.gallery-main {
+  position: relative;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--navy);
+  cursor: zoom-in;
+}
+.gallery-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.gallery-main:hover img { transform: scale(1.02); }
+.gallery-cat-label {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  background: rgba(11, 26, 51, 0.8);
+  color: var(--white);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-chip);
+  backdrop-filter: blur(4px);
+}
+.gallery-expand {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--navy);
+}
+.gallery-thumbs {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+.thumb {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--navy);
+  padding: 0;
+  cursor: pointer;
+}
+.thumb-active { border-color: var(--gold); }
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.thumb-label {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(11,26,51,0.85));
+  color: var(--white);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 14px 8px 6px;
+  text-align: left;
+}
+
+@media (max-width: 700px) {
+  .gallery-thumbs { grid-template-columns: repeat(3, 1fr); }
+}

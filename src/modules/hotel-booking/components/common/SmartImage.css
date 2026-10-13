@@ -1,0 +1,46 @@
+.smart-image-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: block;
+}
+
+.smart-image-placeholder {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0B1A33 0%, #1a3a5c 100%);
+  animation: smart-image-shimmer 1.5s infinite;
+  z-index: 1;
+}
+
+.smart-image-placeholder--hidden {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+@keyframes smart-image-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.smart-image-img {
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  object-fit: cover;
+  display: block;
+}
+
+.smart-image-img--loaded {
+  opacity: 1;
+}
+
+.smart-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0B1A33 0%, #1a3a5c 100%);
+  color: #fff;
+  border-radius: 4px;
+}

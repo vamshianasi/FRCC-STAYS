@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRCC STAYS - Booking Confirmation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .confirmation-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: var(--shadow);
+      max-width: 900px;
+      margin: 0 auto 60px;
+    }
+    .detail-section { margin-bottom: 0; }
+    .info-grid { display: flex; flex-direction: column; gap: 4px; }
+    .info-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 10px 0; border-bottom: 1px solid var(--gray-100); gap: 16px;
+    }
+    .info-row.total { border-top: 2px solid var(--gold); border-bottom: none; margin-top: 8px; padding-top: 14px; }
+    .info-row.total .info-label { font-weight: 700; font-size: 1.1rem; }
+    .info-row.total .info-value { font-size: 1.4rem; font-weight: 700; }
+    .info-label { font-size: 0.875rem; color: var(--gray-500); flex-shrink: 0; }
+    .info-value { font-size: 0.95rem; font-weight: 500; color: var(--navy); text-align: right; }
+    .confirmation-actions {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+      margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--gray-200);
+    }
+    .btn-danger-outline { background: transparent; border: 2px solid var(--error); color: var(--error); }
+    .btn-danger-outline:hover { background: var(--error); color: var(--white); }
+    .deadline-box {
+      display: flex; align-items: center; gap: 10px; padding: 16px 20px;
+      border-radius: var(--radius-sm); background: #fef3c7; border: 1px solid #fcd34d; color: #92400e;
+    }
+    .deadline-box.urgent { background: #fee2e2; border-color: #fca5a5; color: var(--error); }
+    .room-thumb {
+      width: 160px; height: 120px; border-radius: var(--radius-sm);
+      overflow: hidden; flex-shrink: 0; background: var(--gray-200);
+    }
+    @media (max-width: 768px) { .confirmation-card { padding: 24px; } }
+    @media print {
+      .header, .step-indicator, .confirmation-actions, .footer, .breadcrumb-bar { display: none !important; }
+      /* Printed receipt: keep the policy/deadline text, hide interactive buttons */
+      #manage-booking-box .btn, #just-booked-callout .btn, #cancel-btn { display: none !important; }
+      #modal-root { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <main id="main-content">
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+      <div class="step completed"><div class="step-number">1</div><span>Search</span></div>
+      <div class="step-line completed"></div>
+      <div class="step completed"><div class="step-number">2</div><span>Select Room</span></div>
+      <div class="step-line completed"></div>
+      <div class="step completed"><div class="step-number">3</div><span>Details</span></div>
+      <div class="step-line completed"></div>
+      <div class="step completed"><div class="step-number">4</div><span>Payment</span></div>
+      <div class="step-line completed"></div>
+      <div class="step active"><div class="step-number">5</div><span>Confirmed</span></div>
+    </div>
+
+    <div class="container" style="padding-top: 48px;">
+      <div class="confirmation-hero">
+        <div class="success-animation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="64" height="64">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+        <h1 style="font-size: 2.5rem; margin-bottom: 8px;">Booking Confirmed!</h1>
+        <p id="confirmation-message" style="color: var(--gray-700); font-size: 1.1rem; margin-bottom: 24px;"></p>
+        <div class="booking-id" id="booking-id-display" style="display:inline-block; background:var(--navy); color:var(--gold-light); padding:10px 28px; border-radius:8px; font-size:1.35rem; font-weight:700; letter-spacing:0.05em;"></div>
+        <div id="cancelled-banner" style="display:none; background:#fee2e2; border:1px solid #fca5a5; color:var(--error); padding:16px; border-radius:var(--radius-sm); max-width:500px; margin:24px auto 0;"></div>
+        <!-- Success callout (shown immediately after payment succeeds) -->
+        <div id="just-booked-callout" style="display:none; max-width:640px; margin:24px auto 0; padding:18px 20px; background:#f0fdf4; border:1px solid #86efac; border-radius:var(--radius-sm); text-align:left;">
+          <p style="margin:0 0 6px; font-weight:700; color:#166534; font-size:1.05rem;">✓ Booking confirmed!</p>
+          <p id="jb-cancel-line" style="margin:0 0 14px; color:#166534;"></p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-sm" style="background:#166534; color:#fff;" onclick="document.getElementById('confirmation-card-top').scrollIntoView({behavior:'smooth'})">View Booking</button>
+            <button id="jb-cancel-btn" class="btn btn-sm" style="background:var(--error); color:#fff;" onclick="openCancelModal()">Cancel Booking</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="confirmation-card" id="confirmation-card-top">
+        <div class="booking-details-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:40px;">
+          <div class="detail-section">
+            <h3 style="font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:16px; color:var(--navy);">Stay Details</h3>
+            <div style="display:flex; gap:20px; margin-bottom:20px;">
+              <div class="room-thumb"><img id="conf-image" src="" alt="" style="width:100%; height:100%; object-fit:cover;"></div>
+              <div>
+                <h4 id="conf-hotel" style="font-size:1.15rem; margin-bottom:4px;"></h4>
+                <p id="conf-locality" style="color:var(--gray-500); font-size:0.9rem; margin-bottom:4px;"></p>
+                <p id="conf-room" style="color:var(--gray-700); font-size:0.95rem;"></p>
+              </div>
+            </div>
+            <div class="info-grid" id="conf-stay-grid"></div>
+          </div>
+
+          <div class="detail-section">
+            <h3 style="font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:16px; color:var(--navy);">Guest Details</h3>
+            <div class="info-grid" id="conf-guest-grid"></div>
+          </div>
+        </div>
+
+        <div class="detail-section" style="margin-top:32px; padding-top:24px; border-top:1px solid var(--gray-200);">
+          <h3 style="font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:16px; color:var(--navy);">Payment Details</h3>
+          <div class="info-grid" id="conf-payment-grid"></div>
+          <div id="conf-method-box" style="margin-top:16px; padding:12px 16px; background:var(--ivory); border-radius:var(--radius-sm);"></div>
+        </div>
+
+        <!-- Prominent "Manage Booking" cancel box (directly under the summary) -->
+        <div id="manage-booking-box" style="margin-top:24px; padding:20px 24px; border:2px solid var(--gold); border-radius:var(--radius-sm); background:#fffdf6;">
+          <h3 style="font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:10px; color:var(--navy);">Manage This Booking</h3>
+          <p id="manage-line" style="margin:0 0 14px; color:var(--gray-700);"></p>
+          <button id="manage-cancel-btn" class="btn" style="background:var(--error); color:#fff;" onclick="openCancelModal()">Cancel Booking</button>
+          <button id="manage-cancel-disabled" class="btn" style="background:var(--gray-200); color:var(--gray-500); cursor:not-allowed;" disabled>Cancellation is allowed only up to 48 hours before check-in</button>
+        </div>
+
+        <div class="detail-section" style="margin-top:24px; padding-top:24px; border-top:1px solid var(--gray-200);">
+          <h3 style="font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:12px; color:var(--navy);">Cancellation Policy</h3>
+          <div id="conf-deadline"></div>
+        </div>
+
+        <div class="confirmation-actions">
+          <a href="my-bookings.html" class="btn btn-secondary">View My Bookings</a>
+          <a href="index.html" class="btn btn-outline">Book Another Stay</a>
+          <button class="btn btn-outline" onclick="printReceipt()">Print / Download Receipt</button>
+          <button id="cancel-btn" class="btn btn-danger-outline" style="display:none;" onclick="openCancelModal()">Cancel Booking</button>
+        </div>
+
+        <div id="conf-cancelled-info" style="display:none; background:#fee2e2; border-radius:var(--radius-sm); padding:16px; margin-top:20px;"></div>
+      </div>
+    </div>
+
+    <div id="modal-root"></div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/data/images.js"></script>
+  <script src="js/data/hotels.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/bookings.js"></script>
+  <script src="js/cancellation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/booking.js"></script>
+  <script>
+    (function () {
+      var urlParams = new URLSearchParams(window.location.search);
+      var bookingId = urlParams.get('bookingId') || '';
+
+      renderHeader('bookings');
+      renderFooter();
+
+      var booking = Bookings.getById(bookingId);
+
+      if (!booking) {
+        document.getElementById('main-content').innerHTML =
+          '<section class="empty-state" style="padding:80px 0;">' +
+          '<h2>Booking Not Found</h2>' +
+          '<p>This booking does not exist or has been removed.</p>' +
+          '<a href="index.html" class="btn btn-primary">Return Home</a></section>';
+        return;
+      }
+
+      var hotel = HOTELS.find(function (h) { return h.id === booking.hotelId; }) || null;
+      var room = hotel ? hotel.rooms.find(function (r) { return r.id === booking.roomId; }) : null;
+
+      // Booking is done - clear the flow state
+      Booking.clearState();
+
+      document.getElementById('booking-id-display').textContent = booking.id;
+      document.title = 'Booking ' + booking.id + ' - FRCC STAYS';
+
+      function fallbackSvg(label) {
+        return 'data:image/svg+xml,' + encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150">' +
+          '<rect fill="#0B1F3A" width="200" height="150"/>' +
+          '<text x="50%" y="50%" fill="#C9A24B" font-family="Georgia" font-size="12" text-anchor="middle" dominant-baseline="middle">' + label + '</text></svg>'
+        );
+      }
+
+      // Hero message / cancelled banner
+      if (booking.status === 'cancelled') {
+        document.getElementById('confirmation-message').textContent =
+          'This booking has been cancelled. Details are shown below.';
+        var banner = document.getElementById('cancelled-banner');
+        banner.style.display = 'block';
+        banner.innerHTML = '<strong>Booking Cancelled</strong>';
+      } else {
+        document.getElementById('confirmation-message').textContent =
+          'Thank you for choosing FRCC STAYS. Your reservation has been confirmed.';
+      }
+
+      // Image
+      var imgEl = document.getElementById('conf-image');
+      imgEl.src = booking.hotelImage || (hotel ? Utils.getHotelImages(hotel)[0].url : '');
+      imgEl.alt = booking.hotelName || 'Hotel';
+      imgEl.setAttribute('onerror', "this.src='" + fallbackSvg(booking.hotelName || 'Hotel') + "'");
+
+      document.getElementById('conf-hotel').textContent = booking.hotelName || 'Hotel';
+      document.getElementById('conf-locality').textContent = hotel ? hotel.locality + ', ' + hotel.area : '';
+      document.getElementById('conf-room').textContent = (booking.roomName || 'Room') + (room ? ' · ' + room.size + ' sq ft · ' + room.bed : '');
+
+      function row(label, value) {
+        return '<div class="info-row"><span class="info-label">' + label + '</span><span class="info-value">' + value + '</span></div>';
+      }
+
+      // Stay grid
+      document.getElementById('conf-stay-grid').innerHTML =
+        row('Check-in', Utils.formatDate(booking.checkIn) + ', ' + (hotel ? hotel.checkIn : '2:00 PM')) +
+        row('Check-out', Utils.formatDate(booking.checkOut) + ', ' + (hotel ? hotel.checkOut : '11:00 AM')) +
+        row('Nights', booking.nights) +
+        row('Guests', booking.guests.adults + ' Adult' + (booking.guests.adults !== 1 ? 's' : '') + (booking.guests.children > 0 ? ' + ' + booking.guests.children + ' Children' : '')) +
+        row('Guest Type', booking.guestType || 'Standard') +
+        row('Rooms', booking.rooms);
+
+      // Guest grid
+      document.getElementById('conf-guest-grid').innerHTML =
+        row('Name', booking.guestName || 'N/A') +
+        row('Mobile', '+91 ' + (booking.guestMobile || 'N/A')) +
+        row('Email', booking.guestEmail || 'N/A') +
+        (booking.idProofType ? row('ID Proof', booking.idProofType + ' - ' + (booking.idProofNumber || 'N/A')) : '') +
+        (booking.guestRequests
+          ? '<div class="info-row" style="flex-direction:column; align-items:flex-start;">' +
+            '<span class="info-label">Special Requests</span>' +
+            '<span class="info-value" style="font-weight:400; text-align:left;">' + booking.guestRequests + '</span></div>'
+          : '');
+
+      // Payment grid
+      var baseTotal = booking.pricePerNight * booking.nights;
+      var gst = booking.totalPrice - baseTotal;
+      document.getElementById('conf-payment-grid').innerHTML =
+        row('Price per night', Utils.formatCurrency(booking.pricePerNight)) +
+        row('Base price (' + booking.nights + ' night' + (booking.nights !== 1 ? 's' : '') + ')', Utils.formatCurrency(baseTotal)) +
+        row('GST (18%)', Utils.formatCurrency(gst)) +
+        '<div class="info-row total"><span class="info-label">Total Paid</span><span class="info-value">' + Utils.formatCurrency(booking.totalPrice) + '</span></div>';
+
+      document.getElementById('conf-method-box').innerHTML =
+        '<p style="margin:0;"><strong>Payment Method:</strong> <span style="text-transform:capitalize;">' +
+        (booking.paymentMethod || 'N/A').replace(/-/g, ' ') + '</span> &nbsp;|&nbsp; ' +
+        '<strong>Status:</strong> <span style="text-transform:capitalize;">' + (booking.paymentStatus || 'N/A') + '</span></p>';
+
+      // ============ Cancel areas (single source: getCancellationStatus) ============
+      var currentUser = Auth.getCurrentUser();
+      var currentUserId = currentUser ? currentUser.id : null;
+
+      function renderCancelAreas(b) {
+        var st = getCancellationStatus(b, currentUserId);
+        var deadlineEl = document.getElementById('conf-deadline');
+        if (b.status === 'cancelled') {
+          deadlineEl.innerHTML = '<p style="color:var(--gray-700);">This booking was cancelled. No further cancellation is possible.</p>';
+        } else if (st.allowed) {
+          deadlineEl.innerHTML =
+            '<div class="deadline-box">' +
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+            '<span>Free cancellation until ' + st.deadlineText + ' (' + CONFIG.CANCELLATION_WINDOW_HOURS + ' hours before check-in). ' +
+            '<span data-cd="' + st.deadline.toISOString() + '" data-for="' + b.id + '">Cancel within ' + st.countdownText + '</span></span></div>' +
+            '<p style="margin-top:12px; color:var(--gray-700); font-size:0.95rem;">After this time, cancellation is not permitted. For changes or cancellations, contact the hotel directly.</p>';
+        } else {
+          deadlineEl.innerHTML =
+            '<div class="deadline-box urgent">' +
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' +
+            '<span>' + (st.reason === 'not-yours' ? st.reasonText : 'Cancellation window has closed (less than 48 hours before check-in).') + '</span></div>';
+        }
+
+        // Actions-row cancel button (shared helper keeps states consistent)
+        document.getElementById('cancel-btn').outerHTML =
+          '<span id="cancel-btn">' + Cancellation.cancelButtonHTML(b, currentUserId, 'btn btn-danger-outline') + '</span>';
+
+        // Prominent "Manage Booking" box directly under the summary
+        var manageBtn = document.getElementById('manage-cancel-btn');
+        var manageDisabled = document.getElementById('manage-cancel-disabled');
+        var oldBadge = document.getElementById('manage-cancelled-badge');
+        if (oldBadge) oldBadge.remove();
+        if (b.status === 'cancelled') {
+          document.getElementById('manage-line').textContent = 'This booking has been cancelled and can no longer be changed.';
+          manageBtn.style.display = 'none';
+          manageDisabled.style.display = 'none';
+          var badge = document.createElement('span');
+          badge.id = 'manage-cancelled-badge';
+          badge.textContent = 'Cancelled';
+          badge.style.cssText = 'display:inline-block;padding:8px 16px;border-radius:20px;background:#fee2e2;color:var(--error);font-weight:700;';
+          document.getElementById('manage-booking-box').appendChild(badge);
+        } else if (st.allowed) {
+          document.getElementById('manage-line').innerHTML =
+            'Free cancellation until ' + st.deadlineText + ' (' + CONFIG.CANCELLATION_WINDOW_HOURS + ' hours before check-in). ' +
+            '<span data-cd="' + st.deadline.toISOString() + '" data-for="' + b.id + '">Cancel within ' + st.countdownText + '</span>';
+          manageBtn.style.display = 'inline-flex';
+          manageBtn.setAttribute('data-cancel-for', b.id);
+          manageDisabled.style.display = 'none';
+        } else {
+          document.getElementById('manage-line').textContent =
+            (st.reason === 'not-yours' ? st.reasonText : 'Check-in is less than 48 hours away. ' + Cancellation.blockedText);
+          manageBtn.style.display = 'none';
+          manageDisabled.style.display = 'inline-flex';
+        }
+
+        // Cancelled booking info block
+        var box = document.getElementById('conf-cancelled-info');
+        if (b.status === 'cancelled') {
+          box.style.display = 'block';
+          box.innerHTML =
+            '<p style="margin:0; font-weight:600; color:var(--error);">Booking Cancelled</p>' +
+            '<p style="margin:8px 0 0; font-size:0.9rem;">Cancellation ID: ' + (b.cancellationId || 'N/A') + '</p>' +
+            '<p style="margin:4px 0 0; font-size:0.9rem;">Reason: ' + (b.cancellationReason || 'N/A') + '</p>' +
+            '<p style="margin:4px 0 0; font-size:0.9rem;">Cancelled on: ' + Utils.formatDate(b.cancelledAt) + '</p>' +
+            '<p style="margin:4px 0 0; font-size:0.9rem;">Refund status: ' + (b.paymentMethod === 'pay-at-venue' ? 'No payment to refund' : 'Refund initiated — ' + Utils.formatDate(b.cancelledAt)) + '</p>' +
+            '<p style="margin:4px 0 0; font-size:0.9rem;">' + (b.refundInfo ? b.refundInfo.message : 'No refund information available') + '</p>';
+        } else {
+          box.style.display = 'none';
+        }
+      }
+      renderCancelAreas(booking);
+      Cancellation.startTicker();
+
+      // Success callout shown immediately after payment (sessionStorage flag set by payment.html)
+      try {
+        var justId = sessionStorage.getItem('frcc_just_booked');
+        if (justId === booking.id && booking.status !== 'cancelled') {
+          var st0 = getCancellationStatus(booking, currentUserId);
+          document.getElementById('just-booked-callout').style.display = 'block';
+          document.getElementById('jb-cancel-line').textContent = st0.allowed
+            ? 'You can cancel free of charge until ' + st0.deadlineText + '.'
+            : st0.reasonText;
+          if (!st0.allowed) { document.getElementById('jb-cancel-btn').style.display = 'none'; }
+        }
+        sessionStorage.removeItem('frcc_just_booked');
+      } catch (e) {}
+
+      // ============ Actions (shared cancellation modal — single source of truth) ============
+      window.printReceipt = function () { window.print(); };
+
+      window.openCancelModal = function () {
+        Cancellation.openCancelModal(booking.id, {
+          onSuccess: function (fresh) {
+            booking = fresh;
+            renderCancelAreas(fresh);
+          }
+        });
+      };
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRCC STAYS - Search Hotels</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <main id="main-content">
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+      <div class="step completed">
+        <div class="step-number">1</div>
+        <span>Search</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <span>Select Room</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <span>Details</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-number">4</div>
+        <span>Payment</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-number">5</div>
+        <span>Confirmed</span>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="container">
+        <div class="breadcrumb">
+          <a href="index.html">Home</a> / <span id="breadcrumb-text">Hotel Search</span>
+        </div>
+        <h1 id="results-title">Search Results</h1>
+        <p id="results-subtitle">Loading hotels...</p>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <section class="section">
+      <div class="container">
+        <!-- Search Summary -->
+        <div class="search-summary" style="margin-bottom: 24px;">
+          <div class="search-summary-info">
+            <div class="search-summary-item">
+              <label>Area</label>
+              <span id="summary-area">--</span>
+            </div>
+            <div class="search-summary-item">
+              <label>Check-in</label>
+              <span id="summary-checkin">--</span>
+            </div>
+            <div class="search-summary-item">
+              <label>Check-out</label>
+              <span id="summary-checkout">--</span>
+            </div>
+            <div class="search-summary-item">
+              <label>Guests</label>
+              <span id="summary-guests">--</span>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="editSearch()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Edit Search
+          </button>
+        </div>
+
+        <!-- Filters Bar -->
+        <div class="filters-bar">
+          <div class="filters-row">
+            <div class="filter-group">
+              <label>Stars:</label>
+              <div style="display: flex; gap: 8px;">
+                <button class="star-filter" data-stars="" onclick="setStarFilter(this, '')">All</button>
+                <button class="star-filter" data-stars="4" onclick="setStarFilter(this, '4')">4★</button>
+                <button class="star-filter" data-stars="5" onclick="setStarFilter(this, '5')">5★</button>
+              </div>
+            </div>
+            <div class="filter-group">
+              <label>Sort:</label>
+              <select id="sort-select" onchange="sortHotels()">
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="rating">Rating</option>
+                <option value="popularity">Popularity</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Price:</label>
+              <select id="price-filter" onchange="filterByPrice()">
+                <option value="all">Any Price</option>
+                <option value="0-5000">Under ₹5,000</option>
+                <option value="5000-10000">₹5,000 - ₹10,000</option>
+                <option value="10000-25000">₹10,000 - ₹25,000</option>
+                <option value="25000-50000">₹25,000 - ₹50,000</option>
+                <option value="50000-999999">Above ₹50,000</option>
+              </select>
+            </div>
+            <div style="margin-left: auto; font-weight: 600; color: var(--navy);">
+              <span id="results-count">0</span> hotels found
+            </div>
+          </div>
+        </div>
+
+        <!-- Hotels Grid -->
+        <div class="hotels-grid" id="hotels-grid">
+          <!-- Loading skeleton -->
+          <div class="skeleton-card">
+            <div class="skeleton-image skeleton"></div>
+            <div class="skeleton-content">
+              <div class="skeleton skeleton-line medium"></div>
+              <div class="skeleton skeleton-line short"></div>
+              <div class="skeleton skeleton-line"></div>
+              <div class="skeleton skeleton-line short"></div>
+            </div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-image skeleton"></div>
+            <div class="skeleton-content">
+              <div class="skeleton skeleton-line medium"></div>
+              <div class="skeleton skeleton-line short"></div>
+              <div class="skeleton skeleton-line"></div>
+              <div class="skeleton skeleton-line short"></div>
+            </div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-image skeleton"></div>
+            <div class="skeleton-content">
+              <div class="skeleton skeleton-line medium"></div>
+              <div class="skeleton skeleton-line short"></div>
+              <div class="skeleton skeleton-line"></div>
+              <div class="skeleton skeleton-line short"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/>
+          </svg>
+          <h3>No hotels found</h3>
+          <p>We couldn't find any hotels matching your search criteria. Try adjusting your filters.</p>
+          <button class="btn btn-primary" onclick="clearFilters()">Clear Filters</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <style>
+    .star-filter {
+      padding: 6px 14px;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all var(--transition);
+    }
+
+    .star-filter:hover, .star-filter.active {
+      background: var(--navy);
+      color: var(--white);
+      border-color: var(--navy);
+    }
+
+    .filters-bar {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .filters-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-group label {
+      font-size: 0.875rem;
+      color: var(--gray-700);
+      font-weight: 500;
+    }
+
+    .filter-group select {
+      padding: 8px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      background: var(--white);
+    }
+  </style>
+
+  <script src="js/config.js"></script>
+  <script src="js/data/images.js"></script>
+  <script src="js/data/hotels.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/bookings.js"></script>
+  <script src="js/cancellation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/booking.js"></script>
+
+  <script>
+    // Render header/footer
+    renderHeader('hotels');
+    renderFooter();
+
+    // Get search params from URL
+    const params = Booking.getUrlParams();
+    const searchState = Booking.getState();
+
+    // Use URL params or stored state
+    const searchCriteria = {
+      area: params.area || searchState.area || 'Hyderabad',
+      checkIn: params.checkIn || searchState.checkIn || Utils.addDays(Utils.getToday(), 1),
+      checkOut: params.checkOut || searchState.checkOut || Utils.addDays(Utils.getToday(), 3),
+      guestType: params.guestType || searchState.guestType || 'Couple',
+      adults: parseInt(params.adults || searchState.adults) || 2,
+      children: parseInt(params.children || searchState.children) || 0,
+      rooms: parseInt(params.rooms || searchState.rooms) || 1
+    };
+
+    // Save to state
+    Booking.saveState(searchCriteria);
+
+    // State for filtering
+    let filteredHotels = [];
+    let activeStarFilter = '';
+    let activePriceFilter = 'all';
+    let activeSort = 'price-asc';
+
+    // Initialize
+    function init() {
+      // Render summary
+      renderSummary();
+
+      // Initial filter and render
+      applyFilters();
+
+      // Highlight active star filter
+      document.querySelector('.star-filter[data-stars=""]').classList.add('active');
+    }
+
+    function renderSummary() {
+      document.getElementById('summary-area').textContent = searchCriteria.area;
+      document.getElementById('summary-checkin').textContent = Utils.formatDate(searchCriteria.checkIn);
+      document.getElementById('summary-checkout').textContent = Utils.formatDate(searchCriteria.checkOut);
+      document.getElementById('summary-guests').textContent =
+        `${searchCriteria.adults} Adult${searchCriteria.adults !== 1 ? 's' : ''}, ${searchCriteria.children} Child${searchCriteria.children !== 1 ? 'ren' : ''}`;
+
+      // Breadcrumb
+      document.getElementById('breadcrumb-text').textContent = searchCriteria.area;
+      document.getElementById('results-title').textContent = `Hotels in ${searchCriteria.area}`;
+
+      const nights = Utils.nights(searchCriteria.checkIn, searchCriteria.checkOut);
+      document.getElementById('results-subtitle').textContent =
+        `${nights} night${nights !== 1 ? 's' : ''} · ${searchCriteria.rooms} room${searchCriteria.rooms !== 1 ? 's' : ''}`;
+    }
+
+    function setStarFilter(btn, stars) {
+      document.querySelectorAll('.star-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeStarFilter = stars;
+      applyFilters();
+    }
+
+    function filterByPrice() {
+      const value = document.getElementById('price-filter').value;
+      activePriceFilter = value;
+      applyFilters();
+    }
+
+    function sortHotels() {
+      activeSort = document.getElementById('sort-select').value;
+      applyFilters();
+    }
+
+    function clearFilters() {
+      activeStarFilter = '';
+      activePriceFilter = 'all';
+      activeSort = 'price-asc';
+
+      document.getElementById('price-filter').value = 'all';
+      document.getElementById('sort-select').value = 'price-asc';
+      document.querySelectorAll('.star-filter').forEach(b => b.classList.remove('active'));
+      document.querySelector('.star-filter[data-stars=""]').classList.add('active');
+
+      applyFilters();
+    }
+
+    function applyFilters() {
+      // Start with area filter
+      let hotels = HOTELS.filter(h => h.area === searchCriteria.area);
+
+      // Star filter
+      if (activeStarFilter) {
+        const stars = parseInt(activeStarFilter);
+        hotels = hotels.filter(h => h.stars === stars);
+      }
+
+      // Price filter
+      if (activePriceFilter !== 'all') {
+        const [min, max] = activePriceFilter.split('-').map(Number);
+        hotels = hotels.filter(h => h.priceFrom >= min && h.priceFrom <= max);
+      }
+
+      // Sort
+      hotels = sortHotelsList(hotels, activeSort);
+
+      // Update count
+      document.getElementById('results-count').textContent = hotels.length;
+
+      // Render
+      renderHotels(hotels);
+
+      // Save filtered list for other functions
+      filteredHotels = hotels;
+    }
+
+    function sortHotelsList(hotels, sortBy) {
+      const sorted = [...hotels];
+      switch (sortBy) {
+        case 'price-asc':
+          return sorted.sort((a, b) => a.priceFrom - b.priceFrom);
+        case 'price-desc':
+          return sorted.sort((a, b) => b.priceFrom - a.priceFrom);
+        case 'rating':
+          return sorted.sort((a, b) => b.guestRating - a.guestRating);
+        case 'popularity':
+          return sorted.sort((a, b) => b.reviewCount - a.reviewCount);
+        default:
+          return sorted;
+      }
+    }
+
+    function renderHotels(hotels) {
+      const grid = document.getElementById('hotels-grid');
+      const emptyState = document.getElementById('empty-state');
+
+      if (hotels.length === 0) {
+        grid.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      grid.style.display = 'grid';
+      emptyState.style.display = 'none';
+
+      grid.innerHTML = hotels.map(hotel => {
+        const images = Utils.getHotelImages(hotel);
+        const mainImage = images[0] || { url: '', alt: '' };
+        const amenityTags = hotel.amenities.slice(0, 4).map(a =>
+          `<span class="amenity-tag">${Utils.amenityIcon(a)} ${Utils.amenityLabel(a)}</span>`
+        ).join('');
+
+        const detailUrl = `hotel-details.html?hotelId=${hotel.id}&checkIn=${searchCriteria.checkIn}&checkOut=${searchCriteria.checkOut}&adults=${searchCriteria.adults}&children=${searchCriteria.children}&rooms=${searchCriteria.rooms}&guestType=${searchCriteria.guestType}`;
+
+        return `
+          <div class="hotel-card">
+            <div class="hotel-card-image">
+              <img src="${mainImage.url}" alt="${mainImage.alt}" loading="lazy" onerror="this.src='data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="220"><rect fill="#0B1F3A" width="400" height="220"/><text x="50%" y="50%" fill="#C9A24B" font-family="Georgia" font-size="18" text-anchor="middle">${hotel.name}</text></svg>`)}'">
+              <span class="hotel-card-badge">${hotel.stars}-Star</span>
+            </div>
+            <div class="hotel-card-body">
+              <h3 class="hotel-card-name">${hotel.name}</h3>
+              <p class="hotel-card-locality">${hotel.locality}, ${hotel.area}</p>
+              <div class="hotel-card-rating">
+                <span class="hotel-card-stars">${'★'.repeat(hotel.stars)}</span>
+                <span class="hotel-card-rating-badge">${hotel.guestRating.toFixed(1)}</span>
+                <span style="color: var(--gray-500); font-size: 0.875rem;">(${hotel.reviewCount} reviews)</span>
+              </div>
+              <div class="hotel-card-amenities">${amenityTags}</div>
+              <div class="hotel-card-footer">
+                <div class="hotel-card-price">${Utils.formatCurrency(hotel.priceFrom)} <span>/ night</span></div>
+                <a href="${detailUrl}" class="btn btn-primary btn-sm">View Rooms</a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Edit search - go back to home with pre-filled values
+    window.editSearch = function() {
+      const params = new URLSearchParams({
+        area: searchCriteria.area,
+        checkIn: searchCriteria.checkIn,
+        checkOut: searchCriteria.checkOut,
+        guestType: searchCriteria.guestType,
+        adults: searchCriteria.adults,
+        children: searchCriteria.children,
+        rooms: searchCriteria.rooms
+      });
+      window.location.href = `index.html?${params.toString()}`;
+    };
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

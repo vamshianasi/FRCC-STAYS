@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRCC STAYS - My Bookings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .bcard {
+      background: var(--white); border-radius: var(--radius); overflow: hidden;
+      box-shadow: var(--shadow); display: grid; grid-template-columns: 240px 1fr;
+    }
+    .bcard-img { min-height: 200px; background: var(--gray-200); position: relative; overflow: hidden; }
+    .bcard-img img { width: 100%; height: 100%; object-fit: cover; }
+    .bcard-body { padding: 22px 24px; }
+    .bcard-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .bcard-id { font-family: monospace; font-size: 0.85rem; color: var(--gray-500); }
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+    .status-badge.confirmed { background: #dcfce7; color: var(--success); }
+    .status-badge.cancelled { background: #fee2e2; color: var(--error); }
+    .status-badge.completed { background: #dbeafe; color: #1d4ed8; }
+    .bcard h3 { font-size: 1.25rem; margin-bottom: 2px; }
+    .bcard-dates { color: var(--gray-500); font-size: 0.9rem; margin-bottom: 12px; }
+    .bcard-details { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; }
+    .bcard-detail { display: flex; align-items: center; gap: 6px; font-size: 0.875rem; color: var(--gray-700); }
+    .bcard-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--gray-200); }
+    .bcard-amount { font-size: 1.15rem; font-weight: 700; color: var(--navy); }
+    @media (max-width: 768px) { .bcard { grid-template-columns: 1fr; } .bcard-img { height: 180px; } }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <main id="main-content">
+    <div class="container" style="padding-top: 40px; padding-bottom: 60px;">
+      <h1 class="section-title" style="text-align:left; margin-bottom: 4px;">My Bookings</h1>
+      <p style="color: var(--gray-700); margin-bottom: 32px;">Manage your upcoming, completed and cancelled bookings.</p>
+      <div id="bookings-root"></div>
+    </div>
+
+    <div id="modal-root"></div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/data/images.js"></script>
+  <script src="js/data/hotels.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/bookings.js"></script>
+  <script src="js/cancellation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/booking.js"></script>
+  <script>
+    (function () {
+      var user = Auth.getCurrentUser();
+      renderHeader('bookings');
+      renderFooter();
+
+      var root = document.getElementById('bookings-root');
+
+      if (!user) {
+        root.innerHTML =
+          '<div class="empty-state">' +
+            '<h2 style="margin-bottom:8px;">Sign in to view your bookings</h2>' +
+            '<p style="color:var(--gray-500); margin-bottom:24px;">Track, manage and cancel your reservations.</p>' +
+            '<a href="signin.html?redirect=my-bookings.html" class="btn btn-primary">Sign In</a>' +
+          '</div>';
+        return;
+      }
+
+      // Seed demo data on first visit so cancellation rules are demonstrable
+      Bookings.seedDemoBookings(user.id);
+
+      var today = new Date().toISOString().split('T')[0];
+
+      function groupBookings() {
+        var all = Bookings.getByUser(user.id);
+        var upcoming = [], completed = [], cancelled = [];
+
+        all.forEach(function (b) {
+          if (b.status === 'cancelled') { cancelled.push(b); return; }
+          if (b.status === 'completed' || b.checkOut <= today) { completed.push(b); return; }
+          upcoming.push(b); // status confirmed & future
+        });
+
+        var byRecent = function (a, b) {
+          return new Date(b.cancelledAt || b.createdAt || 0) - new Date(a.cancelledAt || a.createdAt || 0);
+        };
+        return {
+          upcoming: upcoming.sort(byRecent),
+          completed: completed.sort(byRecent),
+          cancelled: cancelled.sort(byRecent)
+        };
+      }
+
+      var activeTab = 'upcoming';
+
+      function fallbackSvg(label) {
+        return 'data:image/svg+xml,' + encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200">' +
+          '<rect fill="#0B1F3A" width="240" height="200"/>' +
+          '<text x="50%" y="50%" fill="#C9A24B" font-family="Georgia" font-size="14" text-anchor="middle" dominant-baseline="middle">' + label + '</text></svg>'
+        );
+      }
+
+      function bookingCard(b, group) {
+        var hotel = HOTELS.filter(function (h) { return h.id === b.hotelId; })[0];
+        var area = b.area || (hotel ? hotel.area : '');
+        var methodLabel = (b.paymentMethod || 'N/A').replace(/-/g, ' ');
+
+        // Single source of truth for button states (active / disabled / badges).
+        var cancelBtn = (group === 'upcoming')
+          ? Cancellation.cancelButtonHTML(b, user.id, 'btn btn-sm')
+          : '';
+
+        var deadlineHtml = '';
+        if (group === 'upcoming') {
+          var st = getCancellationStatus(b, user.id);
+          deadlineHtml = '<div class="deadline-box' + ((!st.allowed && st.reason !== 'invalid-date') ? ' urgent' : '') + '" style="margin-top:12px; font-size:0.85rem; padding:10px 14px;">' +
+            (st.allowed
+              ? '<span>' + 'Free cancellation until ' + st.deadlineText +
+                '<br><span data-cd="' + st.deadline.toISOString() + '" data-for="' + b.id + '">Cancel within ' + st.countdownText + '</span></span>'
+              : '<span>' + (st.reason === 'invalid-date' ? st.reasonText : 'Cancellation window closed') + '</span>') +
+            '</div>';
+        }
+
+        var cancelledInfo = '';
+        if (group === 'cancelled') {
+          var refundLine = b.paymentMethod === 'pay-at-venue'
+            ? 'No payment to refund'
+            : 'Refund initiated — ' + Utils.formatDate(b.cancelledAt || (b.refundInfo && b.refundInfo.date));
+          cancelledInfo =
+            '<p style="margin-top:10px; font-size:0.85rem; color:var(--error);">Cancellation ID: ' + (b.cancellationId || 'N/A') + '</p>' +
+            (b.cancellationReason ? '<p style="margin-top:4px; font-size:0.85rem; color:var(--gray-700);">Reason: ' + b.cancellationReason + '</p>' : '') +
+            (b.cancelledAt ? '<p style="margin-top:4px; font-size:0.85rem; color:var(--gray-700);">Cancelled on: ' + Utils.formatDate(b.cancelledAt) + '</p>' : '') +
+            '<p style="margin-top:4px; font-size:0.85rem; font-weight:600; color:var(--success);">' + refundLine + '</p>' +
+            (b.refundInfo && b.refundInfo.message ? '<p style="margin-top:4px; font-size:0.8rem; color:var(--gray-500);">' + b.refundInfo.message + ' <em>(Demo mode.)</em></p>' : '');
+        }
+
+        return '' +
+          '<div class="bcard">' +
+            '<div class="bcard-img">' +
+              '<img src="' + (b.hotelImage || '') + '" alt="' + (b.hotelName || 'Hotel') + '" loading="lazy" ' +
+                'onerror="this.src=\'' + fallbackSvg(b.hotelName || 'Hotel') + '\'">' +
+            '</div>' +
+            '<div class="bcard-body">' +
+              '<div class="bcard-head">' +
+                '<span class="bcard-id">' + b.id + '</span>' +
+                '<span class="status-badge ' + group + '">' + group + '</span>' +
+              '</div>' +
+              '<h3>' + (b.hotelName || 'Hotel') + '</h3>' +
+              (area ? '<p style="color:var(--gray-500); font-size:0.85rem; margin-bottom:2px;">' + area + '</p>' : '') +
+              '<p style="color:var(--gray-700); font-size:0.95rem; margin-bottom:6px;">' + (b.roomName || 'Room') + '</p>' +
+              '<div class="bcard-dates">' + Utils.formatDate(b.checkIn) + ' → ' + Utils.formatDate(b.checkOut) + ' · ' + (b.nights || 0) + ' night(s)</div>' +
+              '<div class="bcard-details">' +
+                '<span class="bcard-detail">' + b.guests.adults + ' Adult' + (b.guests.adults !== 1 ? 's' : '') + (b.guests.children > 0 ? ' + ' + b.guests.children + ' Child' : '') + '</span>' +
+                '<span class="bcard-detail">' + (b.rooms || 1) + ' Room(s)</span>' +
+                '<span class="bcard-detail">' + methodLabel + '</span>' +
+              '</div>' +
+              '<div class="bcard-foot">' +
+                '<span class="bcard-amount">' + Utils.formatCurrency(b.totalPrice) + '</span>' +
+                '<span>' +
+                  '<button class="btn btn-outline btn-sm" onclick="viewDetails(\'' + b.id + '\')">View Details</button> ' +
+                  cancelBtn +
+                '</span>' +
+              '</div>' +
+              deadlineHtml + cancelledInfo +
+            '</div>' +
+          '</div>';
+      }
+
+      function render() {
+        var groups = groupBookings();
+
+        var tabs = [
+          { id: 'upcoming', label: 'Upcoming', list: groups.upcoming },
+          { id: 'completed', label: 'Completed', list: groups.completed },
+          { id: 'cancelled', label: 'Cancelled', list: groups.cancelled }
+        ];
+
+        var html = '<div class="bookings-tabs">';
+        tabs.forEach(function (t) {
+          html += '<button class="bookings-tab ' + (activeTab === t.id ? 'active' : '') + '" onclick="switchTab(\'' + t.id + '\')">' +
+                  t.label + ' (' + t.list.length + ')</button>';
+        });
+        html += '</div>';
+
+        var activeGroup = tabs.filter(function (t) { return t.id === activeTab; })[0];
+
+        if (activeGroup.list.length === 0) {
+          html +=
+            '<div class="empty-state">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:90px; height:90px; color:var(--gray-300); margin:0 auto 20px;">' +
+                '<rect x="2" y="5" width="20" height="15" rx="2"/><path d="M2 10h20M8 3v4M16 3v4"/>' +
+              '</svg>' +
+              '<h3 style="margin-bottom:8px;">No ' + activeGroup.label + ' bookings</h3>' +
+              '<p style="color:var(--gray-500); margin-bottom:24px;">' +
+                (activeTab === 'upcoming' ? 'You have no upcoming reservations yet.' : '') +
+                (activeTab === 'completed' ? 'Completed stays will appear here after check-out.' : '') +
+                (activeTab === 'cancelled' ? 'Cancelled bookings will appear here.' : '') +
+              '</p>' +
+              '<a href="hotels.html" class="btn btn-primary">Book a Hotel</a>' +
+            '</div>';
+        } else {
+          html += activeGroup.list.map(function (b) { return bookingCard(b, activeTab); }).join('');
+        }
+
+        root.innerHTML = html;
+      }
+
+      window.switchTab = function (tab) { activeTab = tab; render(); };
+
+      window.viewDetails = function (bookingId) {
+        var b = Bookings.getById(bookingId);
+        if (!b) { Utils.toast('Booking not found.', 'error'); return; }
+        var hotel = HOTELS.filter(function (h) { return h.id === b.hotelId; })[0];
+        var baseTotal = b.pricePerNight * b.nights;
+        var gst = b.totalPrice - baseTotal;
+        var d = getCancellationStatus(b, user.id);
+        var cancelLineHtml = (b.status === 'cancelled')
+          ? '<p style="margin-top:12px; font-size:0.85rem; color:var(--error);">This booking was cancelled. ' + (b.cancellationId ? 'Cancellation ID: ' + b.cancellationId : '') + '</p>'
+          : (d.allowed
+              ? '<p style="margin-top:12px; font-size:0.85rem; color:#166534; font-weight:600;">Free cancellation until ' + d.deadlineText + '. <span data-cd="' + d.deadline.toISOString() + '" data-for="' + b.id + '">Cancel within ' + d.countdownText + '</span></p>'
+              : '<p style="margin-top:12px; font-size:0.85rem; color:var(--error);">Cancellation is allowed only up to 48 hours before check-in.</p>');
+        var footerButtons = (b.status !== 'cancelled' && d.allowed)
+          ? '<button class="btn btn-secondary" onclick="closeModal()">Close</button>' +
+            '<button class="btn" style="background:var(--error); color:#fff;" onclick="openCancel(\'' + b.id + '\')">Cancel Booking</button>'
+          : '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
+        // Esc closes this modal too; start the countdown ticker for its line.
+        Cancellation.startTicker();
+        if (!window.__vdEsc) {
+          window.__vdEsc = true;
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && document.querySelector('#modal-root .modal-overlay') && !document.querySelector('#cancel-modal')) {
+              closeModal();
+            }
+          });
+        }
+
+        document.getElementById('modal-root').innerHTML =
+          '<div class="modal-overlay active">' +
+            '<div class="modal">' +
+              '<div class="modal-header"><h3>Booking ' + b.id + '</h3>' +
+              '<button class="modal-close" onclick="closeModal()">&times;</button></div>' +
+              '<div class="modal-body">' +
+                '<p><strong>' + (b.hotelName || 'Hotel') + '</strong>' + (hotel ? ' — ' + hotel.locality + ', ' + hotel.area : '') + '</p>' +
+                '<p style="margin-top:8px;"><strong>Room:</strong> ' + (b.roomName || 'N/A') + '</p>' +
+                '<p style="margin-top:6px;"><strong>Check-in:</strong> ' + Utils.formatDate(b.checkIn) + ', ' + (hotel ? hotel.checkIn : '2:00 PM') + '</p>' +
+                '<p style="margin-top:6px;"><strong>Check-out:</strong> ' + Utils.formatDate(b.checkOut) + ', ' + (hotel ? hotel.checkOut : '11:00 AM') + '</p>' +
+                '<p style="margin-top:6px;"><strong>Guests:</strong> ' + b.guests.adults + ' Adult(s)' + (b.guests.children > 0 ? ', ' + b.guests.children + ' Child(ren)' : '') + '</p>' +
+                '<p style="margin-top:6px;"><strong>Guest name:</strong> ' + (b.guestName || 'N/A') + ' (' + (b.guestMobile || '') + ')</p>' +
+                '<p style="margin-top:6px;"><strong>Payment:</strong> <span style="text-transform:capitalize;">' + (b.paymentMethod || '').replace(/-/g, ' ') + '</span></p>' +
+                '<div style="margin-top:14px; border-top:1px solid var(--gray-200); padding-top:12px;">' +
+                  '<div style="display:flex; justify-content:space-between;"><span>Base (' + b.nights + ' nights)</span><span>' + Utils.formatCurrency(baseTotal) + '</span></div>' +
+                  '<div style="display:flex; justify-content:space-between; margin-top:4px;"><span>GST (18%)</span><span>' + Utils.formatCurrency(gst) + '</span></div>' +
+                  '<div style="display:flex; justify-content:space-between; margin-top:10px; font-weight:700; border-top:2px solid var(--gold); padding-top:10px;"><span>Total</span><span>' + Utils.formatCurrency(b.totalPrice) + '</span></div>' +
+                '</div>' +
+                cancelLineHtml +
+              '</div>' +
+              '<div class="modal-footer">' + footerButtons + '</div>' +
+            '</div>' +
+          '</div>';
+      };
+
+      window.closeModal = function () { document.getElementById('modal-root').innerHTML = ''; };
+
+      // Shared cancellation modal (single source of truth). Re-checks on open + confirm.
+      window.openCancel = function (bookingId) {
+        Cancellation.openCancelModal(bookingId, {
+          containerId: 'modal-root',
+          onSuccess: function () { render(); }
+        });
+      };
+
+      Cancellation.startTicker();
+      render();
+    })();
+  </script>
+</body>
+</html>

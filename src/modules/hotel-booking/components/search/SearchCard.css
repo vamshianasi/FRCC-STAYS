@@ -1,0 +1,97 @@
+.search-card {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 8px 32px 24px;
+  /* Overlap only the empty navy space at the bottom of the hero (which has
+     120px bottom padding via .hero-band--with-search). Card stays in normal
+     flow (position: relative) with its top 60px up into the hero's padding,
+     so 60px of navy stays above it. */
+  margin-top: -60px;
+  position: relative;
+  z-index: 2;
+}
+.search-tabs {
+  display: flex;
+  gap: 4px;
+}
+.search-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 18px 16px 14px;
+  position: relative;
+}
+.search-tab.active { color: var(--navy); }
+.search-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 12px; right: 12px; bottom: 0;
+  height: 2px;
+  background: var(--gold);
+}
+.search-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0 -32px;
+}
+.search-form {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 1.2fr 0.8fr 0.8fr auto;
+  gap: 16px;
+  padding-top: 22px;
+  align-items: end;
+}
+.field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+.field-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  height: 56px;
+  padding: 0 14px;
+  background: var(--white);
+}
+.field-control:focus-within { border-color: var(--gold); }
+.field-icon { color: var(--muted); flex-shrink: 0; }
+.field-control select,
+.field-control input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 14.5px;
+  color: var(--text);
+  background: transparent;
+}
+.field-error .field-control { border-color: var(--danger); }
+.field-msg { font-size: 12px; color: var(--danger); margin-top: 5px; display: block; }
+.search-submit { width: 100%; }
+.search-note {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 18px;
+}
+
+@media (max-width: 1100px) {
+  .search-form { grid-template-columns: 1fr 1fr; }
+  .field-submit { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  /* On mobile, remove the overlap so the card never covers wrapped text */
+  .search-card { padding: 8px 18px 20px; margin-top: 0; }
+  .search-form { grid-template-columns: 1fr; }
+  .search-divider { margin: 0 -18px; }
+}

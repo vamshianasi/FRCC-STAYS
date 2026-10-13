@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRCC STAYS - Sign In / Sign Up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .auth-page {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); padding: 24px;
+    }
+    .auth-card {
+      background: var(--white); border-radius: var(--radius); padding: 48px 40px;
+      max-width: 440px; width: 100%; box-shadow: var(--shadow-lg);
+    }
+    .auth-logo { text-align:center; font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; color:var(--navy); margin-bottom:8px; }
+    .auth-logo span { color: var(--gold); }
+    .auth-subtitle { text-align:center; color:var(--gray-500); margin-bottom:28px; }
+    .auth-tabs { display:flex; margin-bottom:28px; border-bottom:2px solid var(--gray-200); }
+    .auth-tab {
+      flex:1; padding:12px; background:none; border:none; font-size:1rem; font-weight:600;
+      color:var(--gray-500); cursor:pointer; transition:all var(--transition);
+    }
+    .auth-tab.active { color:var(--navy); border-bottom:3px solid var(--gold); margin-bottom:-2px; }
+    .auth-home { display:block; text-align:center; margin-top:20px; font-size:0.9rem; color:var(--gray-500); }
+    .demo-note {
+      background:#fef3c7; border:1px solid #fcd34d; border-radius:var(--radius-sm);
+      padding:12px 14px; margin-bottom:20px; font-size:0.8rem; color:#92400e;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <main id="main-content" class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">FRCC <span>STAYS</span></div>
+      <p class="auth-subtitle" id="auth-subtitle">Sign in to continue</p>
+
+      <!--
+        NOTE: This is a minimal placeholder. Replace with team's real Sign up / Sign in screens.
+        Bookings are tied to the current user id returned by Auth.getCurrentUser().
+      -->
+      <div class="demo-note">
+        <strong>Demo auth:</strong> data is stored in localStorage only. Replace with the team's real
+        Sign up / Sign in screens before merging.
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-signin" onclick="switchTab(0)">Sign In</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchTab(1)">Sign Up</button>
+      </div>
+
+      <form id="auth-form" novalidate>
+        <!-- Sign In -->
+        <div id="form-signin">
+          <div class="form-group">
+            <label for="signin-id">Email or Mobile</label>
+            <input type="text" id="signin-id" autocomplete="username" placeholder="you@example.com or 9876543210">
+            <span class="field-error" id="signin-id-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="signin-pass">Password</label>
+            <input type="password" id="signin-pass" autocomplete="current-password" placeholder="••••••••">
+            <span class="field-error" id="signin-pass-error"></span>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:20px;">Sign In</button>
+        </div>
+
+        <!-- Sign Up -->
+        <div id="form-signup" style="display:none;">
+          <div class="form-group">
+            <label for="signup-name">Full Name</label>
+            <input type="text" id="signup-name" autocomplete="name" placeholder="Rahul Kumar">
+            <span class="field-error" id="signup-name-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="signup-email">Email</label>
+            <input type="email" id="signup-email" autocomplete="email" placeholder="rahul@example.com">
+            <span class="field-error" id="signup-email-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="signup-mobile">Mobile</label>
+            <input type="tel" id="signup-mobile" maxlength="10" inputmode="numeric" placeholder="9876543210">
+            <span class="field-error" id="signup-mobile-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="signup-pass">Password</label>
+            <input type="password" id="signup-pass" autocomplete="new-password" placeholder="At least 6 characters">
+            <span class="field-error" id="signup-pass-error"></span>
+          </div>
+          <div class="form-group">
+            <label for="signup-confirm">Confirm Password</label>
+            <input type="password" id="signup-confirm" autocomplete="new-password" placeholder="Re-enter password">
+            <span class="field-error" id="signup-confirm-error"></span>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:20px;">Create Account</button>
+        </div>
+      </form>
+
+      <a href="index.html" class="auth-home">← Back to Home</a>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/data/images.js"></script>
+  <script src="js/data/hotels.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/bookings.js"></script>
+  <script src="js/cancellation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/booking.js"></script>
+  <script>
+    (function () {
+      var urlParams = new URLSearchParams(window.location.search);
+      var redirect = urlParams.get('redirect') || 'index.html';
+      var mode = urlParams.get('mode');
+      var isSignUp = mode === 'signup';
+
+      // Already signed in?
+      if (Auth.getCurrentUser()) {
+        window.location.replace(redirect);
+        return;
+      }
+
+      renderFooter();
+      applyTab(isSignUp ? 1 : 0);
+
+      function applyTab(idx) {
+        document.getElementById('form-signin').style.display = idx === 0 ? 'block' : 'none';
+        document.getElementById('form-signup').style.display = idx === 0 ? 'none' : 'block';
+        document.getElementById('tab-signin').classList.toggle('active', idx === 0);
+        document.getElementById('tab-signup').classList.toggle('active', idx === 1);
+        document.getElementById('auth-subtitle').textContent = idx === 0 ? 'Sign in to continue with your booking' : 'Create an account to get started';
+        clearErrors();
+      }
+      window.switchTab = applyTab;
+
+      function clearErrors() {
+        document.querySelectorAll('.field-error').forEach(function (el) { el.textContent = ''; });
+        document.querySelectorAll('input').forEach(function (el) { el.classList.remove('error'); });
+      }
+      function err(id, msg) {
+        var e = document.getElementById(id + '-error');
+        if (e) e.textContent = msg;
+        var i = document.getElementById(id);
+        if (i) i.classList.add('error');
+      }
+
+      document.getElementById('auth-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearErrors();
+
+        var isUp = document.getElementById('form-signup').style.display !== 'none';
+
+        if (isUp) {
+          var name = document.getElementById('signup-name').value.trim();
+          var email = document.getElementById('signup-email').value.trim();
+          var mobile = document.getElementById('signup-mobile').value.trim();
+          var pass = document.getElementById('signup-pass').value;
+          var confirm = document.getElementById('signup-confirm').value;
+
+          var ok = true;
+          if (name.length < 3) { err('signup-name', 'Enter your full name (min 3 characters)'); ok = false; }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err('signup-email', 'Enter a valid email address'); ok = false; }
+          if (!/^[6-9]\d{9}$/.test(mobile)) { err('signup-mobile', 'Enter a valid 10-digit Indian mobile number'); ok = false; }
+          if (pass.length < 6) { err('signup-pass', 'Password must be at least 6 characters'); ok = false; }
+          if (pass !== confirm) { err('signup-confirm', 'Passwords do not match'); ok = false; }
+          if (!ok) return;
+
+          var result = Auth.register(name, email, mobile, pass);
+          if (result.success) {
+            Utils.toast('Account created successfully!', 'success');
+            redirectNow();
+          } else {
+            err('signup-email', result.error || 'Registration failed');
+          }
+        } else {
+          var identifier = document.getElementById('signin-id').value.trim();
+          var password = document.getElementById('signin-pass').value;
+
+          if (!identifier) { err('signin-id', 'Enter your email or mobile'); return; }
+          if (!password) { err('signin-pass', 'Enter your password'); return; }
+
+          var res = Auth.login(identifier, password);
+          if (res.success) {
+            Utils.toast('Welcome back, ' + res.user.name + '!', 'success');
+            redirectNow();
+          } else {
+            err('signin-pass', res.error || 'Invalid credentials');
+          }
+        }
+      });
+
+      function redirectNow() {
+        setTimeout(function () {
+          var target = sessionStorage.getItem('frcc_redirect_after_signin') || redirect;
+          sessionStorage.removeItem('frcc_redirect_after_signin');
+          window.location.href = target;
+        }, 800);
+      }
+    })();
+  </script>
+</body>
+</html>

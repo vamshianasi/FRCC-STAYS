@@ -1,0 +1,34 @@
+:root {
+  /* Colors */
+  --navy: #0B1A33;
+  --navy-light: #16264A;
+  --gold: #C9A227;
+  --gold-hover: #B8921F;
+  --cream: #FAF7F0;
+  --white: #FFFFFF;
+  --text: #0B1A33;
+  --muted: #6B7385;
+  --border: #E6E1D5;
+  --success: #1F8A5B;
+  --danger: #C0392B;
+  --danger-bg: #FDF0EE;
+
+  /* Radius */
+  --radius-card: 24px;
+  --radius-input: 16px;
+  --radius-button: 14px;
+  --radius-chip: 999px;
+
+  /* Typography */
+  --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Spacing */
+  --container-max: 1500px;
+  --container-pad: 54px;
+
+  /* Shadows */
+  --shadow-card: 0 2px 12px rgba(11, 26, 51, 0.06), 0 1px 3px rgba(11, 26, 51, 0.04);
+  --shadow-header: 0 1px 4px rgba(11, 26, 51, 0.06);
+  --shadow-pop: 0 8px 30px rgba(11, 26, 51, 0.12);
+}

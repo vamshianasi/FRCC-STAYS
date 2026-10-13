@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRCC STAYS - Guest Details</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <main id="main-content">
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+      <div class="step completed"><div class="step-number">1</div><span>Search</span></div>
+      <div class="step-line completed"></div>
+      <div class="step completed"><div class="step-number">2</div><span>Select Room</span></div>
+      <div class="step-line completed"></div>
+      <div class="step active"><div class="step-number">3</div><span>Details</span></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="step-number">4</div><span>Payment</span></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="step-number">5</div><span>Confirmed</span></div>
+    </div>
+
+    <div class="container" style="padding-top: 40px; padding-bottom: 60px;">
+      <div class="breadcrumb-bar" style="padding-bottom: 16px;">
+        <a href="index.html" style="color: var(--gray-700);">Home</a>
+        <span style="color: var(--gray-500); margin: 0 8px;">/</span>
+        <span style="color: var(--navy); font-weight: 600;">Guest Details</span>
+      </div>
+
+      <h1 class="section-title" style="text-align:left; margin-bottom: 8px;">Guest Details</h1>
+      <p style="color: var(--gray-700); margin-bottom: 16px;">Enter the details of the primary guest to continue with booking.</p>
+
+      <!-- Cancellation policy for THESE dates (before payment) -->
+      <div id="guest-policy" style="max-width: 760px;"></div>
+
+      <div class="detail-grid">
+        <!-- Form column -->
+        <div class="form-card">
+          <form id="guest-form" novalidate>
+            <div class="form-section">
+              <h2 class="form-section-title">Contact Information</h2>
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label for="fullName">Full Name <span class="required">*</span></label>
+                  <input type="text" id="fullName" name="fullName" autocomplete="name">
+                  <span class="field-error" id="fullName-error"></span>
+                </div>
+                <div class="form-group">
+                  <label for="mobile">Mobile Number <span class="required">*</span></label>
+                  <input type="tel" id="mobile" name="mobile" placeholder="10-digit number starting with 6-9" maxlength="10" inputmode="numeric">
+                  <span class="field-error" id="mobile-error"></span>
+                </div>
+                <div class="form-group">
+                  <label for="email">Email Address <span class="required">*</span></label>
+                  <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com">
+                  <span class="field-error" id="email-error"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h2 class="form-section-title">Stay Details</h2>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="adults">Number of Adults <span class="required">*</span></label>
+                  <input type="number" id="adults" name="adults" min="1" max="10" value="2">
+                  <span class="field-error" id="adults-error"></span>
+                </div>
+                <div class="form-group">
+                  <label for="children">Number of Children</label>
+                  <input type="number" id="children" name="children" min="0" max="6" value="0">
+                  <span class="field-error" id="children-error"></span>
+                </div>
+                <div class="form-group">
+                  <label for="guestType">Guest Type</label>
+                  <select id="guestType" name="guestType">
+                    <option>Single</option>
+                    <option selected>Couple</option>
+                    <option>Family</option>
+                    <option>Business</option>
+                    <option>Group</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h2 class="form-section-title">Additional Information</h2>
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label for="specialRequests">Special Requests</label>
+                  <textarea id="specialRequests" name="specialRequests" rows="4" placeholder="e.g., High floor room, extra pillow, early check-in (subject to availability)"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="idProofType">ID Proof Type</label>
+                  <select id="idProofType" name="idProofType">
+                    <option value="">None</option>
+                    <option value="Aadhaar">Aadhaar Card</option>
+                    <option value="PAN">PAN Card</option>
+                    <option value="Passport">Passport</option>
+                    <option value="Driving License">Driving License</option>
+                    <option value="Voter ID">Voter ID</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="idProofNumber">ID Proof Number</label>
+                  <input type="text" id="idProofNumber" name="idProofNumber">
+                  <span class="field-error" id="idProofNumber-error"></span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:12px; justify-content:space-between; flex-wrap:wrap;">
+              <a id="back-link" href="hotel-details.html" class="btn btn-secondary">Back</a>
+              <button type="submit" class="btn btn-primary btn-lg">Proceed to Payment</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Sticky summary column -->
+        <div class="sticky-summary" id="booking-summary"></div>
+      </div>
+    </div>
+
+    <div id="modal-root"></div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/data/images.js"></script>
+  <script src="js/data/hotels.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/bookings.js"></script>
+  <script src="js/cancellation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/booking.js"></script>
+  <script>
+    (function () {
+      var user = Auth.getCurrentUser();
+      renderHeader('bookings');
+
+      var urlParams = new URLSearchParams(window.location.search);
+      var state = Booking.getState();
+
+      // Merge URL params with stored state (URL wins)
+      var search = {
+        hotelId: urlParams.get('hotelId') || state.hotelId || '',
+        roomId: urlParams.get('roomId') || state.roomId || '',
+        checkIn: urlParams.get('checkIn') || state.checkIn || '',
+        checkOut: urlParams.get('checkOut') || state.checkOut || '',
+        guestType: urlParams.get('guestType') || state.guestType || 'Couple',
+        adults: parseInt(urlParams.get('adults'), 10) || state.adults || 2,
+        children: parseInt(urlParams.get('children'), 10) || state.children || 0,
+        rooms: parseInt(urlParams.get('rooms'), 10) || state.rooms || 1
+      };
+
+      // Require sign-in before booking
+      if (!user) {
+        sessionStorage.setItem('frcc_redirect_after_signin', 'guest-details.html');
+        document.getElementById('modal-root').innerHTML =
+          '<div class="modal-overlay active">' +
+            '<div class="modal" style="max-width:440px;">' +
+              '<div class="modal-header"><h3>Sign In Required</h3></div>' +
+              '<div class="modal-body">' +
+                '<p>Please sign in to continue with your booking. Your details will be saved.</p>' +
+              '</div>' +
+              '<div class="modal-footer">' +
+                '<a href="index.html" class="btn btn-secondary">Back Home</a>' +
+                '<a href="signin.html?redirect=guest-details.html" class="btn btn-primary">Sign In</a>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        renderFooter();
+        return;
+      }
+      renderFooter();
+
+      var hotel = HOTELS.find(function (h) { return h.id === search.hotelId; });
+      var room = hotel ? hotel.rooms.find(function (r) { return r.id === search.roomId; }) : null;
+
+      if (!hotel || !room) {
+        document.getElementById('main-content').innerHTML =
+          '<section class="empty-state" style="padding:80px 0;">' +
+          '<h2>Selection Missing</h2>' +
+          '<p>Please choose a hotel and room first.</p>' +
+          '<a href="hotels.html" class="btn btn-primary">Find a Hotel</a></section>';
+        return;
+      }
+
+      var nights = Utils.nights(search.checkIn, search.checkOut);
+      var breakdown = Utils.priceBreakdown(room.pricePerNight, nights);
+
+      // Back link preserves the search
+      document.getElementById('back-link').setAttribute(
+        'href',
+        'hotel-details.html?hotelId=' + hotel.id + '&checkIn=' + search.checkIn + '&checkOut=' + search.checkOut +
+        '&adults=' + search.adults + '&children=' + search.children + '&rooms=' + search.rooms + '&guestType=' + search.guestType
+      );
+
+      // Prefill form with previous guest data if present
+      var priorGuest = state.guest || {};
+      document.getElementById('fullName').value = priorGuest.fullName || user.name || '';
+      document.getElementById('mobile').value = priorGuest.mobile || user.mobile || '';
+      document.getElementById('email').value = priorGuest.email || user.email || '';
+      document.getElementById('adults').value = priorGuest.adults || search.adults;
+      document.getElementById('children').value = priorGuest.children !== undefined ? priorGuest.children : search.children;
+      document.getElementById('guestType').value = priorGuest.guestType || search.guestType;
+      document.getElementById('specialRequests').value = priorGuest.specialRequests || '';
+      document.getElementById('idProofType').value = priorGuest.idProofType || '';
+      document.getElementById('idProofNumber').value = priorGuest.idProofNumber || '';
+
+      // ============ Sticky summary ============
+      function renderSummary() {
+        document.getElementById('booking-summary').innerHTML =
+          '<h3>Booking Summary</h3>' +
+          '<div class="summary-row"><span class="label">Hotel</span><span class="value">' + hotel.name + '</span></div>' +
+          '<div class="summary-row"><span class="label">Room</span><span class="value">' + room.name + '</span></div>' +
+          '<div class="summary-row"><span class="label">Check-in</span><span class="value">' + Utils.formatDate(search.checkIn) + '</span></div>' +
+          '<div class="summary-row"><span class="label">Check-out</span><span class="value">' + Utils.formatDate(search.checkOut) + '</span></div>' +
+          '<div class="summary-divider"></div>' +
+          '<div class="summary-row"><span class="label">Price per night</span><span class="value">' + Utils.formatCurrency(room.pricePerNight) + '</span></div>' +
+          '<div class="summary-row"><span class="label">Nights</span><span class="value" id="sum-nights">' + nights + '</span></div>' +
+          '<div class="summary-row"><span class="label">Subtotal</span><span class="value">' + Utils.formatCurrency(breakdown.base) + '</span></div>' +
+          '<div class="summary-row"><span class="label">GST (18%)</span><span class="value">' + Utils.formatCurrency(breakdown.gst) + '</span></div>' +
+          '<div class="summary-total"><span class="label">Total</span><span class="value">' + Utils.formatCurrency(breakdown.total) + '</span></div>';
+      }
+      renderSummary();
+
+      // Cancellation policy for THESE dates — shown BEFORE payment.
+      document.getElementById('guest-policy').innerHTML =
+        '<h3 style="margin-bottom:4px;">Cancellation Policy</h3>' +
+        Cancellation.policyBoxHTML(search.checkIn);
+
+      // Live-update nights if dates change
+      document.getElementById('adults').addEventListener('change', function () {
+        search.adults = parseInt(this.value, 10) || 1;
+        search.children = parseInt(document.getElementById('children').value, 10) || 0;
+      });
+      document.getElementById('children').addEventListener('change', function () {
+        search.children = parseInt(this.value, 10) || 0;
+      });
+
+      // Show/hide ID proof number
+      document.getElementById('idProofType').addEventListener('change', function () {
+        var numInput = document.getElementById('idProofNumber');
+        if (this.value) { numInput.setAttribute('required', ''); }
+        else { numInput.removeAttribute('required'); }
+      });
+
+      // ============ Validation + submit ============
+      function clearErrors() {
+        document.querySelectorAll('.field-error').forEach(function (el) { el.textContent = ''; });
+        document.querySelectorAll('.form-group input, .form-group select, .form-group textarea').forEach(function (el) { el.classList.remove('error'); });
+      }
+
+      function showError(fieldId, message) {
+        var errEl = document.getElementById(fieldId + '-error');
+        var inputEl = document.getElementById(fieldId);
+        if (errEl) errEl.textContent = message;
+        if (inputEl) inputEl.classList.add('error');
+      }
+
+      document.getElementById('guest-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearErrors();
+
+        var data = {
+          fullName: document.getElementById('fullName').value.trim(),
+          mobile: document.getElementById('mobile').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          adults: parseInt(document.getElementById('adults').value, 10),
+          children: parseInt(document.getElementById('children').value, 10),
+          guestType: document.getElementById('guestType').value,
+          specialRequests: document.getElementById('specialRequests').value.trim(),
+          idProofType: document.getElementById('idProofType').value,
+          idProofNumber: document.getElementById('idProofNumber').value.trim()
+        };
+
+        var validation = Booking.validateGuest(data);
+        if (!validation.valid) {
+          Object.keys(validation.errors).forEach(function (field) {
+            showError(field, validation.errors[field]);
+          });
+          // Focus first invalid
+          var firstErr = document.querySelector('.form-group input.error, .form-group select.error');
+          if (firstErr) firstErr.focus();
+          return;
+        }
+
+        // ID proof number required only when a type is selected
+        if (data.idProofType && !data.idProofNumber) {
+          showError('idProofNumber', 'ID proof number is required when a type is selected');
+          return;
+        }
+
+        // Save guest details + search into the booking flow state
+        Booking.saveState({
+          hotelId: hotel.id,
+          hotelName: hotel.name,
+          hotelImage: Utils.getHotelImages(hotel)[0].url,
+          hotelLocality: hotel.locality,
+          hotelAddress: hotel.address,
+          roomId: room.id,
+          roomName: room.name,
+          roomSize: room.size,
+          roomBed: room.bed,
+          roomMaxOccupancy: room.maxOccupancy,
+          roomPricePerNight: room.pricePerNight,
+          roomAmenities: room.amenities,
+          checkIn: search.checkIn,
+          checkOut: search.checkOut,
+          guestType: data.guestType,
+          rooms: search.rooms,
+          guest: {
+            userId: user.id,
+            fullName: data.fullName,
+            name: data.fullName,
+            mobile: data.mobile,
+            email: data.email,
+            adults: data.adults,
+            children: data.children,
+            type: data.guestType,
+            guestType: data.guestType,
+            specialRequests: data.specialRequests,
+            idProofType: data.idProofType,
+            idProofNumber: data.idProofNumber
+          },
+          adults: data.adults,
+          children: data.children
+        });
+
+        sessionStorage.removeItem('frcc_redirect_after_signin');
+        window.location.href = 'payment.html';
+      });
+    })();
+  </script>
+</body>
+</html>

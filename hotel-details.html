@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRCC STAYS - Hotel Details & Rooms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <main id="main-content">
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+      <div class="step completed">
+        <div class="step-number">1</div>
+        <span>Search</span>
+      </div>
+      <div class="step-line completed"></div>
+      <div class="step active">
+        <div class="step-number">2</div>
+        <span>Select Room</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <span>Details</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-number">4</div>
+        <span>Payment</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <div class="step-number">5</div>
+        <span>Confirmed</span>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Page breadcrumb -->
+      <div class="breadcrumb-bar" style="padding: 24px 0 8px;">
+        <a href="index.html" style="color: var(--gray-700);">Home</a>
+        <span style="color: var(--gray-500); margin: 0 8px;">/</span>
+        <a href="hotels.html" style="color: var(--gray-700);">Hotels</a>
+        <span style="color: var(--gray-500); margin: 0 8px;">/</span>
+        <span id="breadcrumb-hotel" style="color: var(--navy); font-weight: 600;">Hotel Details</span>
+      </div>
+
+      <!-- Hotel Gallery -->
+      <div id="hotel-gallery"></div>
+
+      <!-- Two column layout -->
+      <div class="detail-grid" id="detail-grid">
+        <!-- Main info column -->
+        <div class="detail-info">
+          <h2 id="hotel-name"></h2>
+          <p class="locality" id="hotel-locality"></p>
+          <div class="detail-rating" id="hotel-rating"></div>
+          <p class="detail-description" id="hotel-description"></p>
+
+          <h3>Amenities</h3>
+          <div class="amenities-grid" id="hotel-amenities"></div>
+
+          <h3>Policies</h3>
+          <ul class="policies-list" id="hotel-policies"></ul>
+
+          <h3>Location</h3>
+          <p id="hotel-address" style="color: var(--gray-700); line-height: 1.7;"></p>
+
+          <h3>Reviews</h3>
+          <div id="hotel-reviews"></div>
+        </div>
+
+        <!-- Sticky summary column -->
+        <div class="sticky-summary" id="booking-summary"></div>
+      </div>
+
+      <!-- Rooms Section -->
+      <section class="rooms-section" style="margin-top: 48px; padding-bottom: 60px;">
+        <h2 class="section-title" style="margin-bottom: 8px;">Available Rooms</h2>
+        <p class="section-subtitle" id="rooms-subtitle"></p>
+        <!-- Cancellation policy for THESE dates -->
+        <div id="rooms-policy" style="max-width: 760px; margin: 0 auto 24px;"></div>
+        <div id="rooms-list"></div>
+      </section>
+    </div>
+
+    <!-- Cancel/booking modal placeholder -->
+    <div id="modal-root"></div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/data/images.js"></script>
+  <script src="js/data/hotels.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/bookings.js"></script>
+  <script src="js/cancellation.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/booking.js"></script>
+  <script>
+    (function () {
+      // Read URL params
+      var urlParams = new URLSearchParams(window.location.search);
+      var hotelId = urlParams.get('hotelId') || '';
+      var checkIn = urlParams.get('checkIn') || '';
+      var checkOut = urlParams.get('checkOut') || '';
+      var adults = parseInt(urlParams.get('adults'), 10) || 2;
+      var children = parseInt(urlParams.get('children'), 10) || 0;
+      var rooms = parseInt(urlParams.get('rooms'), 10) || 1;
+      var guestType = urlParams.get('guestType') || 'Couple';
+
+      renderHeader('hotels');
+      renderFooter();
+
+      var hotel = HOTELS.find(function (h) { return h.id === hotelId; });
+
+      if (!hotel) {
+        document.getElementById('main-content').innerHTML =
+          '<section class="empty-state" style="padding:80px 0;">' +
+          '<h2>Hotel Not Found</h2>' +
+          '<p>The hotel you are looking for does not exist.</p>' +
+          '<a href="hotels.html" class="btn btn-primary">Browse Hotels</a></section>';
+        return;
+      }
+
+      var nights = Utils.nights(checkIn, checkOut);
+      var totalGuests = adults + children;
+      var cheapestRoom = hotel.rooms.slice().sort(function (a, b) { return a.pricePerNight - b.pricePerNight; })[0];
+      var breakdown = Utils.priceBreakdown(cheapestRoom.pricePerNight, nights);
+      var totalPrice = breakdown.base + breakdown.gst;
+
+      document.getElementById('breadcrumb-hotel').textContent = hotel.name;
+      document.title = hotel.name + ' - FRCC STAYS';
+
+      // Build the "fallback" SVG for a label
+      function fallbackSvg(label) {
+        return 'data:image/svg+xml,' + encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">' +
+          '<rect fill="#0B1F3A" width="800" height="600"/>' +
+          '<text x="50%" y="50%" fill="#C9A24B" font-family="Georgia" font-size="24" text-anchor="middle" dominant-baseline="middle">' + label + '</text></svg>'
+        );
+      }
+
+      // ============ Gallery ============
+      var images = Utils.getHotelImages(hotel);
+      var galleryEl = document.getElementById('hotel-gallery');
+      galleryEl.className = 'gallery-wrapper';
+      galleryEl.innerHTML =
+        '<div class="detail-gallery">' +
+          '<div class="detail-gallery-main" onclick="Lightbox.open(window.__hotelImages, 0)">' +
+            '<img src="' + images[0].url + '" alt="' + images[0].alt + '" onerror="this.src=\'' + fallbackSvg(hotel.name) + '\'">' +
+          '</div>' +
+          '<div class="detail-gallery-thumbs">' +
+            images.slice(1, 5).map(function (img, i) {
+              return '<div class="detail-gallery-thumb" onclick="Lightbox.open(window.__hotelImages, ' + (i + 1) + ')">' +
+                     '<img src="' + img.url + '" alt="' + img.alt + '" loading="lazy" onerror="this.src=\'' + fallbackSvg(hotel.name) + '\'">' +
+                     '</div>';
+            }).join('') +
+          '</div>' +
+        '</div>';
+      window.__hotelImages = images.map(function (img) { return { url: img.url, alt: img.alt }; });
+
+      // ============ Hotel info ============
+      document.getElementById('hotel-name').textContent = hotel.name;
+      document.getElementById('hotel-locality').textContent = hotel.locality + ', ' + hotel.area;
+      document.getElementById('hotel-rating').innerHTML =
+        '<span class="detail-rating-score">' + hotel.guestRating.toFixed(1) + '</span>' +
+        '<div><span class="hotel-card-stars">' + '★'.repeat(hotel.stars) + '</span>' +
+        '<span class="detail-rating-text" style="margin-left:8px;">(' + hotel.reviewCount + ' reviews)</span></div>';
+      document.getElementById('hotel-description').textContent = hotel.description;
+      document.getElementById('hotel-amenities').innerHTML = hotel.amenities.map(function (a) {
+        return '<div class="amenity-item">' + Utils.amenityIcon(a) + '<span>' + Utils.amenityLabel(a) + '</span></div>';
+      }).join('');
+      document.getElementById('hotel-policies').innerHTML = hotel.policies.map(function (p) {
+        return '<li>' + p + '</li>';
+      }).join('') + (function () {
+        var st = getCancellationStatus({ checkIn: checkIn, status: 'confirmed' });
+        return '<li><strong>Cancellation:</strong> ' + (st.allowed ? st.reasonText : st.reasonText) + '</li>';
+      })();
+      document.getElementById('hotel-address').textContent = hotel.address;
+
+      // Sample review snippets derived from rating
+      var reviewSnippets = [
+        { author: 'Priya S.', text: 'Impeccable service and the rooms are pristine. Will definitely return.' },
+        { author: 'Arun K.', text: 'The location is perfect and the suite exceeded expectations.' },
+        { author: 'Divya R.', text: 'Wonderful staff and a beautiful property. Breakfast was excellent.' }
+      ];
+      document.getElementById('hotel-reviews').innerHTML =
+        '<div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px;">' +
+          '<div><div class="detail-rating-score" style="display:inline-block;">' + hotel.guestRating.toFixed(1) + '</div> ' +
+          '<span style="font-weight:600;">Very Good</span></div>' +
+          '<div style="color:var(--gray-500);">' + hotel.reviewCount + ' verified reviews</div>' +
+        '</div>' +
+        reviewSnippets.map(function (r) {
+          return '<div style="padding:14px; border:1px solid var(--gray-200); border-radius:var(--radius-sm); margin-bottom:10px;">' +
+                 '<strong>' + r.author + '</strong> <span style="color:var(--gold);">★★★★★</span>' +
+                 '<p style="margin:6px 0 0; color:var(--gray-700);">' + r.text + '</p></div>';
+        }).join('');
+
+      // ============ Sticky summary ============
+      document.getElementById('booking-summary').innerHTML =
+        '<h3>Booking Summary</h3>' +
+        '<div class="summary-row"><span class="label">Hotel</span><span class="value">' + hotel.name + '</span></div>' +
+        '<div class="summary-row"><span class="label">Area</span><span class="value">' + hotel.area + '</span></div>' +
+        '<div class="summary-row"><span class="label">Check-in</span><span class="value">' + Utils.formatDate(checkIn) + '</span></div>' +
+        '<div class="summary-row"><span class="label">Check-out</span><span class="value">' + Utils.formatDate(checkOut) + '</span></div>' +
+        '<div class="summary-row"><span class="label">Nights</span><span class="value">' + nights + '</span></div>' +
+        '<div class="summary-row"><span class="label">Guests</span><span class="value">' + adults + ' Adult' + (adults !== 1 ? 's' : '') + (children > 0 ? ' + ' + children + ' Child' + (children > 1 ? 'ren' : '') : '') + '</span></div>' +
+        '<div class="summary-row"><span class="label">Check-in time</span><span class="value">' + hotel.checkIn + '</span></div>' +
+        '<div class="summary-row"><span class="label">Check-out time</span><span class="value">' + hotel.checkOut + '</span></div>' +
+        '<div class="summary-divider"></div>' +
+        '<div class="summary-row"><span class="label">Starting from</span><span class="value">' + Utils.formatCurrency(cheapestRoom.pricePerNight) + ' / night</span></div>';
+
+      // ============ Rooms ============
+      document.getElementById('rooms-subtitle').textContent =
+        'Showing ' + hotel.rooms.length + ' room types for ' + nights + ' night' + (nights !== 1 ? 's' : '') + ', ' + totalGuests + ' guest' + (totalGuests !== 1 ? 's' : '');
+
+      // Cancellation policy for THESE dates (shown in the room selection area).
+      document.getElementById('rooms-policy').innerHTML =
+        '<h3 style="margin-bottom:4px;">Cancellation Policy</h3>' +
+        Cancellation.policyBoxHTML(checkIn);
+
+      // Collect all room images into one global map BEFORE rendering (script tags in innerHTML don't execute)
+      window.__roomImages = {};
+      hotel.rooms.forEach(function (room) {
+        window.__roomImages[room.id] = Utils.getRoomImages(room, hotel.name)
+          .map(function (i) { return { url: i.url, alt: i.alt }; });
+      });
+
+      document.getElementById('rooms-list').innerHTML = hotel.rooms.map(function (room) {
+        var roomImages = Utils.getRoomImages(room, hotel.name);
+        var available = Bookings.getAvailability(hotel.id, room.id, checkIn, checkOut, room.totalRooms);
+        var fits = room.maxOccupancy >= totalGuests;
+        var canBook = available > 0 && fits;
+
+        var badgeHtml;
+        if (!fits) {
+          badgeHtml = '<span class="availability-badge soldout">Too small for ' + totalGuests + ' guests</span>';
+        } else if (available === 0) {
+          badgeHtml = '<span class="availability-badge soldout">Sold out</span>';
+        } else if (available <= 3) {
+          badgeHtml = '<span class="availability-badge limited">Only ' + available + ' room' + (available !== 1 ? 's' : '') + ' left!</span>';
+        } else {
+          badgeHtml = '<span class="availability-badge available">Available</span>';
+        }
+
+        var roomBreakdown = Utils.priceBreakdown(room.pricePerNight, nights);
+        var detailUrl = 'guest-details.html?hotelId=' + hotel.id + '&checkIn=' + checkIn + '&checkOut=' + checkOut +
+                        '&adults=' + adults + '&children=' + children + '&rooms=' + rooms + '&guestType=' + guestType + '&roomId=' + room.id;
+
+        return '' +
+          '<div class="room-card">' +
+            '<div class="room-card-inner">' +
+              '<div class="room-gallery">' +
+                '<div class="room-gallery-main" onclick="Lightbox.open(window.__roomImages_' + room.id + ', 0)">' +
+                  '<img src="' + roomImages[0].url + '" alt="' + roomImages[0].alt + '" onerror="this.src=\'' + fallbackSvg(room.name) + '\'">' +
+                '</div>' +
+                '<div class="room-gallery-nav">' +
+                  roomImages.slice(0, 5).map(function (_, i) {
+                    return '<div class="room-gallery-dot ' + (i === 0 ? 'active' : '') + '" onclick="Lightbox.open(window.__roomImages[\'' + room.id + '\'], ' + i + ')"></div>';
+                  }).join('') +
+                '</div>' +
+              '</div>' +
+              '<div class="room-info">' +
+                '<h3>' + room.name + '</h3>' +
+                '<div class="room-specs">' +
+                  '<div class="room-spec">' + Utils.amenityIcon('pool') + room.size + ' sq ft</div>' +
+                  '<div class="room-spec">' + Utils.amenityIcon('gym') + room.bed + '</div>' +
+                  '<div class="room-spec">' + Utils.amenityIcon('kids-zone') + 'Sleeps ' + room.maxOccupancy + '</div>' +
+                '</div>' +
+                '<div class="room-amenities">' +
+                  room.amenities.slice(0, 5).map(function (a) {
+                    return '<span class="amenity-tag">' + a + '</span>';
+                  }).join('') +
+                '</div>' +
+                '<div class="room-price-section">' +
+                  '<div>' +
+                    '<div class="room-price">' + Utils.formatCurrency(room.pricePerNight) + ' <span>/ night</span></div>' +
+                    '<div style="font-size:0.85rem; color:var(--gray-500); margin-top:2px;">' + Utils.formatCurrency(roomBreakdown.total) + ' total for ' + nights + ' night' + (nights !== 1 ? 's' : '') + ' (incl. 18% GST)</div>' +
+                    '<div style="margin-top:8px;">' + badgeHtml + '</div>' +
+                  '</div>' +
+                  (canBook
+                    ? '<a href="' + detailUrl + '" class="btn btn-primary" onclick=\'saveRoomChoice(' + JSON.stringify({ id: room.id, name: room.name, pricePerNight: room.pricePerNight, size: room.size, bed: room.bed, maxOccupancy: room.maxOccupancy }) + ')\'>Select Room</a>'
+                    : '<button class="btn btn-primary" disabled style="opacity:0.5; cursor:not-allowed;">Unavailable</button>') +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      }).join('');
+
+      // Save chosen room for the next step (called by inline onclick)
+      window.saveRoomChoice = function (room) {
+        Booking.saveState({
+          hotelId: hotel.id,
+          hotelName: hotel.name,
+          hotelImage: images[0].url,
+          roomId: room.id,
+          roomName: room.name,
+          roomPricePerNight: room.pricePerNight
+        });
+      };
+    })();
+  </script>
+</body>
+</html>

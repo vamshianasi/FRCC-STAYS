@@ -1,0 +1,72 @@
+.confirm-main { padding-bottom: 40px; }
+.confirm-success {
+  text-align: center;
+  padding: 32px 0 24px;
+}
+.success-icon {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--success);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.success-icon::after {
+  content: ''; width: 24px; height: 12px;
+  border-left: 4px solid var(--white);
+  border-bottom: 4px solid var(--white);
+  transform: rotate(-45deg);
+  margin-bottom: 4px;
+}
+.confirm-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.confirm-sub { color: var(--muted); font-size: 16px; margin-top: 6px; }
+.confirm-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 32px;
+  align-items: start;
+}
+.confirm-card {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.card-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 18px;
+}
+.confirm-info { display: flex; flex-direction: column; gap: 12px; }
+.ci-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ci-row:last-child { border: none; }
+.ci-row span:first-child { color: var(--muted); font-size: 14px; }
+.ci-row span:last-child { font-weight: 600; color: var(--navy); text-align: right; }
+.cancel-section { background: var(--white); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 24px; }
+.cancel-btn {
+  width: 100%;
+  height: 56px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.cancel-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.cancel-deadline { text-align: center; margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+.cancel-blocked { text-align: center; margin-top: 10px; color: var(--danger); font-size: 13.5px; font-weight: 500; }
+
+@media (max-width: 1000px) {
+  .confirm-layout { grid-template-columns: 1fr; }
+}

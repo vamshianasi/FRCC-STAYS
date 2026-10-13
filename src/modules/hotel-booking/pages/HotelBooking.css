@@ -1,0 +1,40 @@
+.booking-main { padding-bottom: 40px; }
+.featured-section { margin-top: 56px; }
+.section-head { margin-bottom: 24px; }
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-top: 6px;
+}
+.hotel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.areas-section { margin-top: 56px; }
+.area-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.area-card {
+  position: relative;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--navy);
+  display: block;
+  text-decoration: none;
+}
+
+/* AreaCollage component handles internal layout and overlay */
+
+@media (max-width: 1000px) {
+  .hotel-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .hotel-grid { grid-template-columns: 1fr; }
+  .area-grid { grid-template-columns: 1fr; }
+}

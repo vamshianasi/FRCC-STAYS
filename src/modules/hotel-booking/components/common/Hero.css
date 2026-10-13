@@ -1,0 +1,46 @@
+.hero-band {
+  background: var(--navy);
+  /* Default: comfortable bottom padding for pages without search card.
+     The hero sizes to its content (breadcrumb, title, subtitle). */
+  padding: 34px 0 44px;
+  min-height: 0;
+}
+.hero-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 22px;
+}
+.crumb-wrap { display: inline-flex; align-items: center; gap: 8px; }
+.crumb { color: rgba(255,255,255,0.55); }
+.crumb:hover { color: var(--gold); }
+.crumb-current { color: rgba(255,255,255,0.85); }
+.crumb-sep { color: rgba(255,255,255,0.3); }
+.hero-title {
+  font-family: var(--font-serif);
+  color: var(--white);
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.hero-subtitle {
+  color: rgba(255,255,255,0.7);
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+/* Modifier for pages with search card overlap (HotelBooking) */
+.hero-band--with-search {
+  /* Extra bottom padding so the search card (margin-top: -72px) overlaps
+     only the empty navy space, never the breadcrumb, title or subtitle. */
+  padding-bottom: 120px;
+}
+
+@media (max-width: 700px) {
+  .hero-title { font-size: 32px; }
+}
+@media (max-width: 640px) {
+  .hero-band { padding: 28px 0 36px; }
+  .hero-band--with-search { padding: 28px 0 88px; }
+}

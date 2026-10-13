@@ -1,0 +1,40 @@
+.price-summary {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  position: sticky;
+  top: 100px;
+}
+.ps-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 18px;
+}
+.ps-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.ps-discount { color: var(--success); }
+.ps-save { color: var(--success); font-weight: 600; }
+.ps-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 14px 0;
+}
+.ps-total {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0;
+}
+.ps-total span:last-child {
+  font-family: var(--font-serif);
+  font-size: 22px;
+}
