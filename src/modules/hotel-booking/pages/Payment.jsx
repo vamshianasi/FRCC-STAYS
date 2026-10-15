@@ -3,16 +3,15 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Hero from '../components/common/Hero';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
-import MemberToggle from '../components/booking/MemberToggle';
+
 import StepProgress from '../components/booking/StepProgress';
 import PriceSummary from '../components/booking/PriceSummary';
-import { routes } from '../config/routes';
 import { formatINR, formatDate, genId } from '../lib/format';
 import { luhnCheck, detectCardType } from '../lib/luhn';
 import { verifyUpi } from '../lib/verifyUpi';
-import { isMember, MEMBER_DISCOUNT } from '../config/member';
 import { addBooking } from '../lib/storage';
 import { genCancellationId } from '../lib/format';
+import { LOCATIONS, getLocation, getRoom } from '../config/locations';
 import './Payment.css';
 
 const METHODS = ['UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallets', 'EMI', 'Pay at Venue'];
@@ -22,15 +21,30 @@ export default function Payment() {
   const location = useLocation();
   const booking = location.state || JSON.parse(sessionStorage.getItem('frcc-booking') || '{}');
   const guest = JSON.parse(sessionStorage.getItem('frcc-guest') || '{}');
-  if (!booking.hotel) { navigate('/book/hotel'); return null; }
 
-  const { hotel, room, checkIn, checkOut, adults, children } = booking;
+  // New format: booking has locationId and roomType
+  // Old format: booking had hotel and room
+  if (!booking.locationId && !booking.hotel) {
+    navigate('/book/hotel');
+    return null;
+  }
+
+  // Resolve location and room from new format
+  const loc = booking.locationId ? getLocation(booking.locationId) : null;
+  const room = booking.roomType ? getRoom(booking.locationId || 'hyderabad', booking.roomType) : null;
+  const isNewFormat = !!booking.locationId;
+
+  if (!room) {
+    navigate('/book/hotel');
+    return null;
+  }
+
+  const checkIn = isNewFormat ? booking.checkIn : (booking.hotel?.checkIn || '');
+  const checkOut = isNewFormat ? booking.checkOut : (booking.hotel?.checkOut || '');
   const nights = Math.max(1, Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000));
   const base = room.pricePerNight * nights;
-  const discount = isMember ? Math.round(base * MEMBER_DISCOUNT) : 0;
-  const subtotal = base - discount;
-  const gst = Math.round(subtotal * 0.18);
-  const total = subtotal + gst;
+  const gst = Math.round(base * 0.18);
+  const total = base + gst;
 
   const [method, setMethod] = useState('UPI');
   const [card, setCard] = useState({ number: '', expiry: '', cvv: '', name: '' });
@@ -83,17 +97,36 @@ export default function Payment() {
     const bookingId = genId('FRCC');
     const newBooking = {
       id: bookingId,
-      hotel, room, checkIn: booking.checkIn, checkOut: booking.checkOut,
-      adults: guest.adults, children: guest.children,
-      guestName: guest.fullName, mobile: guest.mobile, email: guest.email,
-      guestType: guest.guestType, specialRequests: guest.specialRequests,
-      paymentMethod, status, total, base, discount, gst,
+      locationId: isNewFormat ? booking.locationId : (booking.hotel?.id || 'hyderabad'),
+      city: isNewFormat ? loc?.city : (booking.hotel?.area || 'Hyderabad'),
+      roomType: isNewFormat ? booking.roomType : (booking.hotel?.rooms?.find(r => r.name)?.name || 'Standard Room'),
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      adults: guest.adults,
+      children: guest.children,
+      guestName: guest.fullName,
+      mobile: guest.mobile,
+      email: guest.email,
+      guestType: guest.guestType,
+      specialRequests: guest.specialRequests,
+      // WhatsApp (full number stored on the booking, always shown masked)
+      whatsappCode: guest.whatsappCode,
+      whatsappNumber: guest.whatsappNumber,
+      whatsappNumberMasked: guest.whatsappNumberMasked,
+      whatsappConsent: guest.whatsappConsent,
+      // ID proof: type + MASKED number only
+      idProof: guest.idProof,
+      idProofLabel: guest.idProofLabel,
+      idNumberMasked: guest.idNumberMasked,
+      visaNumberMasked: guest.visaNumberMasked,
+      paymentMethod, status, total, base, gst,
       createdAt: new Date().toISOString(),
       cancellationDeadline: new Date(new Date(booking.checkIn).getTime() - 48 * 3600000).toISOString()
     };
     addBooking(bookingId, newBooking);
     sessionStorage.removeItem('frcc-booking');
     sessionStorage.removeItem('frcc-guest');
+    // Receipt is sent automatically by the Confirmation page on mount.
     navigate(`${routes.confirmation.replace(':bookingId', bookingId)}`);
   }
 
@@ -102,7 +135,13 @@ export default function Payment() {
       <Header />
       <Hero
         title="Payment"
-        crumbs={[{ label: 'Home', to: '/book/hotel' }, { label: 'Hotel' }, { label: 'Resorts' }, { label: 'Details' }, { label: 'Payment' }]}
+        crumbs={[
+          { label: 'Home', to: '/book/hotel' },
+          { label: 'Hotel' },
+          { label: loc?.city || 'Resorts', to: `/book/hotel/stay/${loc?.id || 'hyderabad'}` },
+          { label: roomType => roomType.type || 'Details', to: '/' },
+          { label: 'Payment' }
+        ]}
       />
       <main className="container payment-main">
         <StepProgress current={4} />
@@ -181,7 +220,7 @@ export default function Payment() {
             </div>
           </div>
           <aside className="payment-right">
-            <PriceSummary room={booking.room} checkIn={booking.checkIn} checkOut={booking.checkOut} />
+            <PriceSummary room={room} checkIn={checkIn} checkOut={checkOut} />
             <button className="btn-primary pay-btn" onClick={pay} disabled={processing || (method === 'UPI' && (!upi.verified || !upi.confirmed)) || (method.match(/Card/) && (!card.number || !card.expiry || !card.cvv)) || (method === 'Pay at Venue' && !payAtVenue)}>
               {processing ? <span className="pay-btn-text">{processStage === 'validating' ? 'Validating...' : processStage === 'processing' ? 'Processing...' : 'Success! Redirecting...'}</span> : <span className="pay-btn-text">Pay {formatINR(total)}</span>}
             </button>
@@ -195,7 +234,6 @@ export default function Payment() {
         </div>
       </main>
       <Footer />
-      <MemberToggle />
     </>
   );
 }

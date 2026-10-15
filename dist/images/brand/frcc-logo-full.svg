@@ -1,0 +1,19 @@
+<!-- frcc-logo-full.svg: Full logo including emblem + "FRCC" + tagline -->
+<!-- The emblem plus "FRCC" wordmark and "CLUB · RESORT · SOCIETY" tagline -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 256" width="1024" height="256">
+  <!-- Navy ring background -->
+  <circle cx="512" cy="128" r="100" fill="#0B1A33"/>
+  <!-- Gold film reel -->
+  <path d="M150 128c0-5-3-8-8-8h-40c-5 0-8 3-8 8v40c0 5 3 8 8 8h40c5 0 8-3 8-8v-40z" fill="#D4AF37"/>
+  <path d="M270 128c0-5-3-8-8-8h-24c-5 0-8 3-8 8v24c0 5 3 8 8 8h24c5 0 8-3 8-8v-24z" fill="#D4AF37"/>
+  <path d="M440 128c0-5-3-8-8-8h-36c-5 0-8 3-8 8v44c0 5 3 8 8 8h36c5 0 8-3 8-8v-44z" fill="#D4AF37"/>
+  <!-- Dome -->
+  <path d="M512 36c-55 0-102 32-132 80V192c0 55 37 102 84 102s84-47 84-102V36z" fill="#D4AF37"/>
+  <!-- Waves in center -->
+  <path d="M512 180c80 0 146-66 146-146S592 94 512 94 368 158 368 238 432 294 512 294 574 238 574 158 512 94 512 94z" fill="#0B1A33"/>
+  <!-- FRCC text -->
+  <text x="200" y="150" font-family="Georgia, serif" font-size="48" font-weight="700" fill="#D4AF37" text-anchor="middle">FRCC</text>
+  <text x="200" y="190" font-family="Georgia, serif" font-size="16" fill="#D4AF37" text-anchor="middle">reel stories... real connections ...</text>
+  <!-- Additional "FILM RECREATION & CULTURAL CENTRE" text below -->
+  <text x="200" y="215" font-family="Georgia, serif" font-size="14" fill="#A0A0A0" text-anchor="middle">FILM RECREATION & CULTURAL CENTRE</text>
+</svg>

@@ -1,4 +1,14 @@
 .results-main { padding-bottom: 40px; }
+.results-search { margin-bottom: 28px; }
+.results-search .search-card { margin-top: 0; }
+.results-date-hint {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+.hotel-details-main .results-search .search-card { margin-top: 0; }
+.hotel-details-main .results-search { margin-bottom: 24px; }
+.hotel-details-main .results-date-hint { margin: 0 0 20px; }
 .results-layout {
   display: grid;
   grid-template-columns: 260px 1fr;

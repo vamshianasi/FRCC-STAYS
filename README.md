@@ -202,6 +202,74 @@ URLs come from `js/data/images.js` by gallery id.
 
 ---
 
+## WhatsApp Receipt Delivery
+
+Every booking can have its PDF receipt sent to the guest's WhatsApp number. The
+receipt is sent **automatically** right after the booking is saved (payment
+success, or Pay at Venue confirmed), and again automatically after a
+cancellation. Guests can also resend it manually from the confirmation page or
+from My Bookings.
+
+### Modes
+
+`src/modules/hotel-booking/services/whatsapp.js` exports a single config
+constant:
+
+```js
+export const WHATSAPP_MODE = 'demo'; // or 'live'
+```
+
+- **`demo` (default)** — waits about 1.5 seconds and resolves. Nothing is sent.
+  The UI says so explicitly: *"Receipt sent to +91 98XXXXXX10 (demo mode, no
+  real message sent)"*.
+- **`live`** — POSTs `{ bookingId, to }` to `/api/send-receipt`. The backend
+  holds the credentials, uploads the PDF and sends an approved template message.
+
+### Switching your team to live mode
+
+1. Get a **WhatsApp Business Account** and a **Meta Business App** with the
+   **WhatsApp** product enabled.
+2. Create a **message template** in WhatsApp Manager → Message Templates (for
+   example `frcc_booking_receipt` with a document header and body variables).
+   **Templates must be reviewed and approved by Meta** before a business-initiated
+   template message can be delivered. This approval is the step teams most often
+   miss — budget a day or two for it.
+3. Deploy a backend based on `server/send-receipt.example.js` and set its
+   environment variables:
+   - `WHATSAPP_TOKEN` — permanent token from WhatsApp → API setup
+   - `WHATSAPP_PHONE_NUMBER_ID` — the sender number id
+   - `WHATSAPP_TEMPLATE_NAME` — your approved template name
+4. Point the frontend at that backend (proxy `/api/send-receipt` in your dev
+   server or reverse proxy).
+5. Set `WHATSAPP_MODE = 'live'`.
+
+### Providers instead of Meta directly
+
+If you would rather not wire the Cloud API yourself, any of these will do the
+sending behind a simple HTTP endpoint of your own: **Twilio WhatsApp API**,
+**Gupshup**, **Interakt**, **Wati**, or **AiSensy**. They still require an
+approved message template. Keep the same `/api/send-receipt` contract so the
+frontend does not change.
+
+### Security rules
+
+- **Never put an API key or token in frontend code.** The token lives only in the
+  backend or your secret manager.
+- The endpoint receives only the booking id and the destination number; it looks
+  the booking up itself and renders the PDF server-side.
+- The full WhatsApp number is stored on the booking but is always **masked** in
+  the UI (`+91 98XXXXXX10`), and is never written to the console.
+- The full ID number is never stored, printed, logged or sent — only the masked
+  form (`XXXX XXXX 9012`).
+
+### Rate limiting
+
+At most **5 sends per booking**, with a short wait between them. After that the
+UI shows *"Please try again later"*. A failed send never blocks or undoes the
+booking.
+
+---
+
 ## Payment Gateway Integration
 
 > **DEMO MODE ACTIVE:** All payments in this project are simulated. No real transactions occur. The `Payment.processPayment()` and `Payment.verifyUpi()` functions are simulation placeholders.

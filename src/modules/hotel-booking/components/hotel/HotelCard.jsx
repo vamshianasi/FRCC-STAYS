@@ -17,7 +17,7 @@ export default function HotelCard({ hotel }) {
         <p className="hotel-card-loc">{hotel.locality}, {hotel.area}</p>
         <div className="hotel-card-amenities">
           {hotel.amenities.slice(0, 4).map(a => (
-            <span key={a} className="amenity-tag">{a.replace('-', ' ')}</span>
+            <span key={a} className="amenity-tag">{a}</span>
           ))}
         </div>
         <div className="hotel-card-price">

@@ -190,13 +190,15 @@ input, select, textarea {
 }
 
 .logo {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--navy);
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.logo img {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
 }
 
 .logo span {
@@ -1816,11 +1818,15 @@ input, select, textarea {
 }
 
 .footer-logo {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--white);
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-logo img {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
 }
 
 .footer-logo span {

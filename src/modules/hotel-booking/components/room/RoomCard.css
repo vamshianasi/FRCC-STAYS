@@ -1,81 +1,72 @@
-.room-card {
-  background: var(--white);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: 24px;
-  margin-bottom: 24px;
+.room-card{
+  background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);
+  width:100%;
+  margin-bottom:16px;
 }
-.room-card-top {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 28px;
-  margin-bottom: 20px;
+.room-card-top{
+  position:relative;height:200px;
 }
-.room-card-name {
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 600;
-  color: var(--navy);
-  margin-bottom: 8px;
+.room-card-top .Gallery{
+  position:absolute;inset:0;object-fit:cover;background:#1a1a2e;
 }
-.room-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 14px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
+.room-card-info{
+  padding:12px 14px;border-bottom:1px solid #eee;
 }
-.room-card-amenities {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.room-card-name{
+  margin:0 0 6px;font-weight:600;font-size:14px;color:#0b1a33;
 }
-.room-card-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-  flex-wrap: wrap;
-  gap: 14px;
+.room-card-meta{
+  display:flex;gap:6px;font-size:12px;color:#6b7385;
+  flex-wrap:wrap;
 }
-.room-card-price {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
+.room-card-bottom{
+  padding:12px 14px;border-top:1px solid #eee;
+  display:flex;flex-direction:column;gap:8px;
 }
-.price-member-tag {
-  background: var(--gold);
-  color: var(--navy);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 4px 10px;
-  border-radius: var(--radius-chip);
+.room-card-price{
+  flex-shrink:0;
 }
-.price-orig {
-  font-size: 16px;
-  color: var(--muted);
-  text-decoration: line-through;
+.price-regular{
+  font-weight:600;color:#c9a227;font-size:18px;
 }
-.price-member {
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--navy);
+.price-unit{
+  color:#6b7385;font-size:13px;margin-left:4px;
 }
-.price-regular {
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--navy);
+.price-pending{
+  color:#6b7385;font-size:13px;
+  padding:8px 0;
 }
-.price-unit { font-size: 13px; color: var(--muted); }
-
-@media (max-width: 900px) {
-  .room-card-top { grid-template-columns: 1fr; }
+.price-pending::before{
+  content:"Select dates to see price";
+}
+.room-card-availability{
+  margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+}
+.stock-message{
+  font-size:12px;color:#c9a227;font-weight:500;
+  background:rgba(201,162,39,0.18);border:1px solid rgba(201,162,39,0.55);
+  border-radius:10px;padding:2px 6px;margin-right:4px;
+  white-space:nowrap;
+}
+.stock-message::before{
+  content:"Only ";display:none;
+}
+.stock-message.only5::before{content:"Only ";display:inline;}
+.sold-out{
+  color:#e74c3c;font-size:12px;background:#ffeef0;border:1px solid #e74c3c;
+  border-radius:4px;padding:2px 6px;white-space:nowrap;
+}
+.btn-primary{
+  width:100%;padding:8px 0;border:none;border-radius:6px;
+  font-weight:500;font-size:14px;color:#0b1a33;background:#c9a227;
+  cursor:pointer;transition:background .2s;
+}
+.btn-primary:hover{background:#b38u22;}
+.btn-primary:disabled{
+  background:#e2e2e3;color:#6b7385;cursor:not-allowed;
+}
+@media (max-width:640px){
+  .room-card-bottom{padding:8px 10px;}
+  .price-regular{font-size:16px;}
+  .stock-message{font-size:11px;padding:1px 4px;}
 }

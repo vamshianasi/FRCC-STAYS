@@ -159,7 +159,10 @@ function renderHeader(activePage) {
   header.className = 'header';
   header.innerHTML = `
     <div class="header-inner">
-      <a href="index.html" class="logo">FRCC <span>STAYS</span></a>
+      <a href="index.html" class="logo">
+        <img src="/images/brand/frcc-emblem.png" alt="FRCC - Film Recreation & Cultural Centre" width="64" height="64" style="flex-shrink:0;" />
+        FRCC <span>STAYS</span>
+      </a>
       <ul class="nav-links">
         <li><a href="hotels.html" class="${activePage === 'hotels' ? 'active' : ''}">Hotel Booking</a></li>
         <li><a href="my-bookings.html" class="${activePage === 'bookings' ? 'active' : ''}">My Bookings</a></li>
@@ -188,7 +191,10 @@ function renderFooter() {
     <div class="container">
       <div class="footer-inner">
         <div class="footer-brand">
-          <div class="footer-logo">FRCC <span>STAYS</span></div>
+          <div class="footer-logo">
+            <img src="/images/brand/frcc-emblem.png" alt="FRCC - Film Recreation & Cultural Centre" width="72" height="72" style="flex-shrink:0;" />
+            FRCC <span>STAYS</span>
+          </div>
           <p>Experience Luxury Across Telangana & Andhra Pradesh</p>
         </div>
         <div class="footer-links">

@@ -43,18 +43,25 @@
 }
 .mb-empty { text-align: center; padding: 60px 20px; color: var(--muted); }
 .mb-empty a { margin-top: 16px; display: inline-block; }
+/* Cards are never narrower than 520px on wider screens, which is the point
+   where three action buttons still fit side by side. Below that the buttons
+   stack (see the @container rule further down). */
 .mb-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
   gap: 24px;
 }
+/* The card is a container so the action grid can react to the CARD width,
+   not the viewport width, and no button can ever spill out of the card. */
 .mb-card {
   background: var(--white);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
 }
 .mb-card-img {
   position: relative;
@@ -70,6 +77,8 @@
   position: absolute;
   top: 12px;
   left: 12px;
+  /* Above .smart-image-img, which sits at z-index 2. */
+  z-index: 3;
   color: var(--white);
   font-size: 11px;
   font-weight: 700;
@@ -83,6 +92,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
 }
 .mb-card-name {
   font-family: var(--font-serif);
@@ -90,14 +100,17 @@
   font-weight: 600;
   color: var(--navy);
   margin-bottom: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
-.mb-card-loc { color: var(--muted); font-size: 13.5px; margin-bottom: 8px; }
+.mb-card-loc { color: var(--muted); font-size: 13.5px; margin-bottom: 8px; min-width: 0; overflow-wrap: anywhere; }
 .mb-card-meta {
   display: flex;
   gap: 8px;
   color: var(--muted);
   font-size: 13.5px;
   flex-wrap: wrap;
+  min-width: 0;
   margin-bottom: 12px;
 }
 .mb-card-price {
@@ -106,8 +119,35 @@
   justify-content: space-between;
   padding-top: 12px;
   border-top: 1px solid var(--border);
+  min-width: 0;
   margin-bottom: 16px;
 }
+/* Receipt status on booking cards */
+.mb-receipt-status { font-size: 12.5px; margin-top: 10px; font-weight: 600; }
+.mb-receipt-status--sending { color: var(--muted); }
+.mb-receipt-status--sent { color: var(--success); }
+.mb-receipt-status--failed { color: var(--danger); }
+.mb-receipt-status--rate_limited { color: var(--gold); }
+
+/* Cancellation details on cancelled cards */
+.mb-cancel-info {
+  background: var(--danger-bg);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.mb-cancel-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--text);
+  padding: 3px 0;
+}
+.mb-cancel-info-row span:first-child { color: var(--muted); min-width: 0; }
+.mb-cancel-info-row span:last-child { font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.mb-cancel-note { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
 .mb-price {
   font-family: var(--font-serif);
   font-size: 22px;
@@ -115,15 +155,32 @@
   color: var(--navy);
 }
 .mb-id { font-size: 12.5px; color: var(--muted); }
+/* Action area: a grid, never a flex row, so every button is an equal-width
+   cell that cannot be pushed out of the card. */
 .mb-card-actions {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin-top: auto;
 }
-.btn-danger {
-  background: var(--danger);
-  color: var(--white);
+.mb-card-actions--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Compact buttons inside cards: same family, slightly smaller. */
+.mb-card-actions .frcc-btn {
+  min-height: 48px;
+  font-size: 15px;
+  padding: 6px 12px;
+  min-width: 0;
+  width: 100%;
+  white-space: normal;
 }
-.btn-danger:hover { background: #A02E22; }
+.cancel-note { margin-top: 12px; font-size: 13px; color: #6B7385; }
+
+/* Below 520px of card width the buttons stack full width. */
+@container (max-width: 520px) {
+  .mb-card-actions,
+  .mb-card-actions--2 { grid-template-columns: minmax(0, 1fr); }
+}
 
 @media (max-width: 640px) {
   .mb-grid { grid-template-columns: 1fr; }

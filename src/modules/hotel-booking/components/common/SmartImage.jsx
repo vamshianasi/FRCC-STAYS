@@ -7,20 +7,16 @@ import './SmartImage.css';
  *  - explicit width/height (prevents layout shift)
  *  - soft blurred placeholder while loading
  *  - single consistent onerror fallback (never shows broken-image icon)
- *  - console warning on failure with hotel/room id and path
+ *  - console warning on failure with the owner id and path
  */
-export default function SmartImage({ src, alt, width, height, className, onClick, eager }) {
+export default function SmartImage({ src, alt, width, height, className, onClick, eager, owner }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
-  function handleError(e) {
+  function handleError() {
     setError(true);
     setLoaded(true);
-    // Log warning with context for debugging
-    console.warn(`[SmartImage] Failed to load: ${src}${alt ? ` (alt: ${alt})` : ''}`);
-    if (e?.target) {
-      e.target.style.display = 'none';
-    }
+    console.warn(`[SmartImage] Failed to load image${owner ? ` for ${owner}` : ''}: ${src}`);
   }
 
   function handleLoad() {

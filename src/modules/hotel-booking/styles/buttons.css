@@ -1,0 +1,49 @@
+/**
+ * Shared action button styles.
+ *
+ * One class set (.frcc-btn + one colour modifier) is used by every booking
+ * action button: Download Receipt, My Bookings, View Details and Cancel
+ * Booking. They all share the same size, radius, font and spacing so no two
+ * buttons on the same row can look different.
+ */
+
+.frcc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 56px;
+  padding: 0 24px;
+  border-radius: 14px;
+  border: 1.5px solid transparent;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.frcc-btn--gold { background: #C9A227; color: #0B1A33; }
+.frcc-btn--gold:hover { background: #B8921F; }
+.frcc-btn--navy { background: #0B1A33; color: #fff; }
+.frcc-btn--navy:hover { background: #13264A; }
+.frcc-btn--outline { background: #fff; color: #0B1A33; border-color: #0B1A33; }
+.frcc-btn--outline:hover { background: #F3F0E8; }
+.frcc-btn--danger { background: #C0392B; color: #fff; }
+.frcc-btn--danger:hover { background: #A93226; }
+
+.frcc-btn:disabled,
+.frcc-btn[aria-disabled="true"] {
+  background: #E5E7EB;
+  color: #8A93A6;
+  border-color: #E5E7EB;
+  cursor: not-allowed;
+}
+.frcc-btn:disabled:hover,
+.frcc-btn[aria-disabled="true"]:hover { background: #E5E7EB; }
+
+.frcc-btn:focus-visible { outline: 3px solid #C9A227; outline-offset: 2px; }

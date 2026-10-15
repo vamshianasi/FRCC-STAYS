@@ -36,6 +36,56 @@
 .form-grid { grid-column: 1 / -1; }
 .form-submit { width: 100%; height: 56px; font-size: 16px; }
 
+/* WhatsApp number field */
+.wa-row { display: flex; gap: 10px; align-items: center; }
+.wa-row input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 11px 12px;
+  font-size: 14.5px;
+}
+.wa-code {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 11px 10px;
+  font-size: 14px;
+  background: var(--white);
+  max-width: 180px;
+}
+.wa-code:focus,
+.wa-row input:focus { outline: none; border-color: var(--gold); }
+.fg-error .wa-row input,
+.fg-error .wa-code { border-color: var(--danger); }
+.wa-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13.5px;
+  color: var(--text);
+  margin-top: 10px;
+  cursor: pointer;
+}
+.wa-check input {
+  accent-color: var(--gold);
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.wa-helper { display: block; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.wa-visa-field { margin-top: 14px; }
+.wa-visa-field label { display: block; margin-bottom: 7px; }
+.wa-visa-field input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 11px 12px;
+  font-size: 14.5px;
+}
+.wa-visa-field input:focus { outline: none; border-color: var(--gold); }
+
 @media (max-width: 1000px) {
   .guest-layout { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }

@@ -3,37 +3,34 @@ import { useNavigate } from 'react-router-dom';
 import Hero from '../components/common/Hero';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
-import MemberToggle from '../components/booking/MemberToggle';
+
 import SmartImage from '../components/common/SmartImage';
 import { routes } from '../config/routes';
-import { loadBookings, cancelBooking } from '../lib/storage';
+import { loadBookings, cancelBooking, updateBooking } from '../lib/storage';
 import { formatDate, formatINR } from '../lib/format';
-import { getCancellationStatus } from '../config/cancellation';
+import { getCancellationStatus, CANCELLATION_NOTE } from '../config/cancellation';
+import { TABS, DEFAULT_TAB, tabForBooking, filterByTab, tabCounts, sortBookings } from '../lib/bookingTabs';
+import { sendReceiptToWhatsApp, applyReceiptSent } from '../services/whatsapp';
 import './MyBookings.css';
-
-const FILTERS = ['Upcoming', 'Completed', 'Cancelled'];
 
 export default function MyBookings() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState('Upcoming');
+  const [filter, setFilter] = useState(DEFAULT_TAB);
   const [bookings, setBookings] = useState([]);
   const [cancelModal, setCancelModal] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
+  // Per-booking receipt status: { [bookingId]: { status, error, to, at } }
+  const [receiptState, setReceiptState] = useState({});
 
-  useEffect(() => {
-    const all = loadBookings();
-    // filter by current user (demo-user)
-    const mine = all.filter(b => b.mobile === 'demo-user' || b.guestName === 'Guest');
-    setBookings(mine);
-  }, []);
+  function reload() {
+    setBookings(sortBookings(loadBookings()));
+  }
 
-  const filtered = bookings.filter(b => {
-    if (filter === 'Upcoming') return b.status === 'Confirmed' || b.status === 'pending';
-    if (filter === 'Completed') return b.status === 'Completed';
-    if (filter === 'Cancelled') return b.status === 'Cancelled';
-    return true;
-  });
+  useEffect(() => { reload(); }, []);
+
+  const counts = tabCounts(bookings);
+  const filtered = sortBookings(filterByTab(bookings, filter));
 
   function openCancel(b) {
     setCancelTarget(b);
@@ -43,17 +40,26 @@ export default function MyBookings() {
 
   function confirmCancel() {
     if (!cancelReason || !cancelTarget) return;
-    cancelBooking(cancelTarget.id, cancelReason);
-    setBookings(loadBookings().filter(b => b.mobile === 'demo-user' || b.guestName === 'Guest'));
+    const cancelled = cancelBooking(cancelTarget.id, cancelReason);
+    reload();
     setCancelModal(false);
     setCancelTarget(null);
+    // Cancellation receipt is sent automatically.
+    if (cancelled) deliver(cancelled);
   }
 
-  function getStatusColor(status) {
-    if (status === 'Confirmed') return 'var(--success)';
-    if (status === 'pending') return 'var(--gold)';
+  async function deliver(target) {
+    setReceiptState(s => ({ ...s, [target.id]: { status: 'sending' } }));
+    const result = await sendReceiptToWhatsApp(target);
+    setReceiptState(s => ({ ...s, [target.id]: result }));
+    updateBooking(target.id, applyReceiptSent(target, result));
+    reload();
+  }
+
+  function statusColor(status) {
     if (status === 'Cancelled') return 'var(--danger)';
-    return 'var(--muted)';
+    if (status === 'pending') return 'var(--gold)';
+    return 'var(--success)';
   }
 
   return (
@@ -67,15 +73,14 @@ export default function MyBookings() {
         <div className="mb-header">
           <h2 className="mb-title">Your Bookings</h2>
           <div className="mb-tabs">
-            {FILTERS.map(f => (
-              <button key={f} className={'mb-tab' + (filter === f ? ' active' : '')} onClick={() => setFilter(f)}>
-                {f} <span className="tab-count">
-                  {bookings.filter(b => (f === 'Upcoming' ? (b.status === 'Confirmed' || b.status === 'pending') : f === 'Completed' ? b.status === 'Completed' : b.status === 'Cancelled')).length}
-                </span>
+            {TABS.map(t => (
+              <button key={t} className={'mb-tab' + (filter === t ? ' active' : '')} onClick={() => setFilter(t)}>
+                {t} <span className="tab-count">{counts[t]}</span>
               </button>
             ))}
           </div>
         </div>
+
         {filtered.length === 0 ? (
           <div className="mb-empty">
             <p>No {filter.toLowerCase()} bookings found.</p>
@@ -86,6 +91,14 @@ export default function MyBookings() {
             {filtered.map(b => {
               const cancelStatus = getCancellationStatus(b);
               const cover = b.hotel?.gallery?.find(g => g.category === 'Exterior') || b.room?.gallery?.[0];
+              const rs = receiptState[b.id];
+              const lastSent = rs?.status === 'sent' ? rs.at : b.receiptSent?.at;
+              const isCancelled = b.status === 'Cancelled' || !!b.cancelledAt;
+              const isUpcoming = tabForBooking(b) === 'Upcoming';
+              const canCancel = isUpcoming && cancelStatus.allowed && !isCancelled;
+              const refundNote = b.paymentMethod === 'Pay at Venue'
+                ? 'No payment made, nothing to refund'
+                : `Refund of ${formatINR(b.total)} to the original method in 5–7 working days`;
               return (
                 <div key={b.id} className="mb-card">
                   <div className="mb-card-img">
@@ -93,9 +106,10 @@ export default function MyBookings() {
                       src={cover?.file || '/images/placeholder.svg'}
                       alt={cover?.alt || b.hotel?.name}
                       className="mb-card-cover"
+                      owner={b.id}
                     />
-                    <span className="mb-status" style={{background: getStatusColor(b.status)}}>
-                      {b.status}
+                    <span className="mb-status" style={{ background: statusColor(b.status) }}>
+                      {b.status === 'confirmed' ? 'Confirmed' : b.status === 'pending' ? 'Pay at Venue' : b.status}
                     </span>
                   </div>
                   <div className="mb-card-body">
@@ -110,12 +124,72 @@ export default function MyBookings() {
                       <span className="mb-price">{formatINR(b.total)}</span>
                       <span className="mb-id">{b.id}</span>
                     </div>
-                    <div className="mb-card-actions">
-                      <button className="btn-outline" onClick={() => { navigate(`/book/hotel/confirmation/${b.id}`); }}>View Details</button>
-                      {(b.status === 'Confirmed' || b.status === 'pending') && cancelStatus.allowed && (
-                        <button className="btn-danger" onClick={() => openCancel(b)}>Cancel</button>
+
+                    {rs && (
+                      <p className={'mb-receipt-status mb-receipt-status--' + rs.status}>
+                        {rs.status === 'sending' && 'Sending receipt to WhatsApp...'}
+                        {rs.status === 'sent' && `Receipt sent to ${rs.to}${rs.mode === 'demo' ? ' (demo mode, no real message sent)' : ''}`}
+                        {rs.status === 'rate_limited' && (rs.error || 'Please try again later')}
+                        {rs.status === 'failed' && (
+                          <>
+                            {rs.error || 'Could not send'}
+                            <button className="wa-resend" onClick={() => deliver(b)}>Resend</button>
+                          </>
+                        )}
+                      </p>
+                    )}
+                    {lastSent && !rs && (
+                      <p className="mb-receipt-status mb-receipt-status--sent">
+                        Last sent {new Date(lastSent).toLocaleString('en-IN')}
+                      </p>
+                    )}
+
+                    {isCancelled && (
+                      <div className="mb-cancel-info">
+                        {b.cancellationId && (
+                          <p className="mb-cancel-info-row">
+                            <span>Cancellation ID</span><span>{b.cancellationId}</span>
+                          </p>
+                        )}
+                        <p className="mb-cancel-info-row">
+                          <span>Cancelled on</span>
+                          <span>{b.cancelledAt ? formatDate(b.cancelledAt) : '—'}</span>
+                        </p>
+                        <p className="mb-cancel-info-row">
+                          <span>Reason</span><span>{b.cancellationReason || '—'}</span>
+                        </p>
+                        <p className="mb-cancel-note">{refundNote}</p>
+                      </div>
+                    )}
+
+                    <div className={'mb-card-actions' + (isUpcoming ? '' : ' mb-card-actions--2')}>
+                      <button
+                        className="frcc-btn frcc-btn--outline"
+                        onClick={() => deliver(b)}
+                        disabled={rs?.status === 'sending'}
+                      >
+                        Download Receipt
+                      </button>
+                      <button
+                        className="frcc-btn frcc-btn--navy"
+                        onClick={() => navigate(`/book/hotel/confirmation/${b.id}`)}
+                      >
+                        View Details
+                      </button>
+                      {isUpcoming && (
+                        <button
+                          className="frcc-btn frcc-btn--danger"
+                          onClick={() => openCancel(b)}
+                          disabled={!canCancel}
+                        >
+                          Cancel Booking
+                        </button>
                       )}
                     </div>
+
+                    {isUpcoming && !canCancel && (
+                      <p className="cancel-note">{CANCELLATION_NOTE}</p>
+                    )}
                   </div>
                 </div>
               );
@@ -124,7 +198,7 @@ export default function MyBookings() {
         )}
       </main>
       <Footer />
-      <MemberToggle />
+
       {cancelModal && (
         <div className="modal-overlay" onClick={() => setCancelModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -151,8 +225,6 @@ export default function MyBookings() {
           </div>
         </div>
       )}
-      <Footer />
-      <MemberToggle />
     </>
   );
 }

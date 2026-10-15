@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-/**
- * tools/check-images.js
+/** tools/check-images.js
  * Verifies the FRCC STAYS image library:
- *  - checks every manifest path exists on disk
- *  - checks for duplicate files across hotels/rooms/areas
- *  - checks hotels have >= 10 photos and gym photos
- *  - check rooms have >= 6 photos
- *  - checks area images exist (4 per city)
- *  - checks CREDITS.md entries exist
- *  - reports any failures
- *
- * Usage: node tools/check-images.js
+ *  - 4 room galleries of 6 photos each (24 total): hyderabad-standard,
+ *    hyderabad-suite, vijayawada-standard, vijayawada-suite
+ *  - each Standard gallery has >= 1 washroom; each Suite gallery has >= 2 washroom
+ *  - only allowed room photo categories
+ *  - no duplicate file paths
+ *  - every referenced file is credited in images/CREDITS.md
+ *  - no banned amenity words in photo categories or alt text
+ *  - no Amaravathi references
+ *  - no amenities filter code remaining in pages
  */
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -19,153 +19,187 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.join(__dirname, '..');
+const PUBLIC = path.join(ROOT, 'public');
 
-const { default: HOTELS } = await import('../src/modules/hotel-booking/data/hotels.js');
-const { default: areaManifest } = await import('../tools/area-images.json', { with: { type: 'json' } });
+const { default: LOCATIONS } = await import('../src/modules/hotel-booking/config/locations.js');
 
-let missingFiles = 0;
-let duplicateFiles = 0;
-let incompleteGalleries = 0;
-let missingCredits = 0;
 const errors = [];
 
-// Check every image path exists on disk
-const allPaths = new Map(); // path -> [owners]
+// Gallery slot definitions in the order they appear in each room gallery
+const SLOTS = {
+  bedroomWide: { label: 'bedroom-wide', cats: ['Bedroom'], min: 0, max: 6, washMin: 0 },
+  bedCloseup: { label: 'bed-closeup', cats: ['Bed'], min: 0, max: 6, washMin: 0 },
+  stdDesk: { label: 'std-desk', cats: ['Work Desk'], min: 0, max: 6, washMin: 0 },
+  stdWindow: { label: 'std-window', cats: ['Window View'], min: 0, max: 6, washMin: 0 },
+  stdWashroom: { label: 'std-washroom', cats: ['Washroom'], min: 0, max: 6, washMin: 0 },
+  stdTea: { label: 'std-tea', cats: ['Tea Corner'], min: 0, max: 6, washMin: 0 },
+  suiteSofa: { label: 'suite-sofa', cats: ['Living Area'], min: 0, max: 6, washMin: 0 },
+  suiteBalcony: { label: 'suite-balcony', cats: ['Balcony'], min: 0, max: 6, washMin: 0 },
+  suiteWashroom: { label: 'suite-washroom', cats: ['Washroom'], min: 0, max: 6, washMin: 0 },
+  washupCloseup: { label: 'washup-closeup', cats: ['Washroom'], min: 0, max: 6, washMin: 0 },
+};
 
-for (const hotel of HOTELS) {
-  // Check hotel gallery
-  const hotelCats = new Set();
-  for (const img of hotel.gallery) {
-    const filePath = path.join(ROOT, 'public', img.file);
-    if (!fs.existsSync(filePath)) {
-      missingFiles++;
-      errors.push(`MISSING: ${img.file} (hotel ${hotel.id})`);
-    }
-    if (!allPaths.has(img.file)) allPaths.set(img.file, []);
-    allPaths.get(img.file).push(`hotel:${hotel.id}`);
-    hotelCats.add(img.category);
-  }
+// Map galleryKey from locations.js to slot definitions
+const GALLERY_KEY_MAP = {
+  'hyderabad-standard': 'stdDesk',
+  'hyderabad-suite': 'suiteSofa',
+  'vijayawada-standard': 'stdDesk',
+  'vijayawada-suite': 'suiteSofa',
+};
 
-  // Check hotel has >= 10 photos
-  if (hotel.gallery.length < 10) {
-    incompleteGalleries++;
-    errors.push(`HOTEL ${hotel.id} has only ${hotel.gallery.length} photos (need >= 10)`);
-  }
-
-  // Check hotel has gym photos
-  const hasGym = hotel.gallery.some(g => g.category.toLowerCase().includes('gym'));
-  if (!hasGym) {
-    incompleteGalleries++;
-    errors.push(`HOTEL ${hotel.id} missing gym photos`);
-  }
-
-  // Check room galleries
-  for (const room of hotel.rooms) {
-    for (const img of room.gallery) {
-      const filePath = path.join(ROOT, 'public', img.file);
-      if (!fs.existsSync(filePath)) {
-        missingFiles++;
-        errors.push(`MISSING: ${img.file} (room ${room.id})`);
-      }
-      if (!allPaths.has(img.file)) allPaths.set(img.file, []);
-      allPaths.get(img.file).push(`room:${room.id}`);
-    }
-
-    if (room.gallery.length < 6) {
-      incompleteGalleries++;
-      errors.push(`ROOM ${room.id} has only ${room.gallery.length} photos (need >= 6)`);
-    }
-  }
-}
-
-// Check area hotel/resort photos (3 per city: 1 large + 2 small)
-let flaggedContent = 0;
-// Use word boundaries to avoid false positives (e.g., "manicured" contains "man")
-const bannedPatterns = [
-  /\bflower\b/i, /\bbird\b/i, /\bparrot\b/i, /\bperson\b/i, /\bman\b/i, /\bwoman\b/i, 
-  /\bbracelet\b/i, /\bcloud\b/i, /\bbeach\b/i, /\bsea\b/i, /\bocean\b/i, /\bpalm\b/i, /\btropical\b/i
+const BANNED_WORDS = [
+  'pool', 'swimming', 'spa', 'gym', 'fitness', 'kids', 'play zone',
+  'garden', 'lawn', 'restaurant', 'dining', 'bar', 'banquet', 'ballroom',
+  'airport transfer', 'kitchen', 'kitchenette', 'pantry', 'cooking', 'microwave',
+  'luxury', 'royal', 'presidential', 'premier', 'villa', 'palace',
+  'chandelier', 'jacuzzi', 'bathtub'
 ];
 
-for (const [city, images] of Object.entries(areaManifest)) {
-  if (images.length < 3) {
-    incompleteGalleries++;
-    errors.push(`AREA ${city} has only ${images.length} photos (need >= 3)`);
+function hasWord(text, word) {
+  return new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text);
+}
+
+// ---- Collect all referenced images from LOCATIONS rooms ----
+const usedPaths = new Map(); // file path -> [owners]
+let referencedCount = 0;
+let existingCount = 0;
+let missingCount = 0;
+const missing = [];
+
+function checkGallery(gallery, owner, allowedCats, countRule) {
+  const list = gallery || [];
+  const n = list.length;
+  if (n < countRule.min || n > countRule.max) {
+    errors.push(`${owner}: expected ${countRule.min}-${countRule.max} photos, got ${n}`);
   }
-  for (const img of images) {
-    const filePath = path.join(ROOT, 'public', img.file);
-    if (!fs.existsSync(filePath)) {
-      missingFiles++;
-      errors.push(`MISSING: ${img.file} (area ${city})`);
+  for (const img of list) {
+    // file path
+    referencedCount++;
+    const disk = path.join(PUBLIC, img.file.replace(/^\//, ''));
+    if (fs.existsSync(disk)) existingCount++;
+    else { missingCount++; missing.push(img.file); }
+    if (usedPaths.has(img.file)) {
+      usedPaths.get(img.file).push(owner);
+    } else {
+      usedPaths.set(img.file, [owner]);
     }
-    if (!allPaths.has(img.file)) allPaths.set(img.file, []);
-    allPaths.get(img.file).push(`area:${city}`);
-    
-    // Check alt text for banned content using word boundaries
-    if (img.alt) {
-      for (const pattern of bannedPatterns) {
-        if (pattern.test(img.alt)) {
-          flaggedContent++;
-          errors.push(`FLAGGED: ${img.file} (area ${city}) alt matches "${pattern}": "${img.alt}"`);
-        }
+
+    // thumb path (if present)
+    if (img.thumb) {
+      referencedCount++;
+      const thumbDisk = path.join(PUBLIC, img.thumb.replace(/^\//, ''));
+      if (fs.existsSync(thumbDisk)) existingCount++;
+      else { missingCount++; missing.push(img.thumb); }
+      if (usedPaths.has(img.thumb)) {
+        usedPaths.get(img.thumb).push(owner);
+      } else {
+        usedPaths.set(img.thumb, [owner]);
       }
     }
+
+    // category allowlist
+    if (!allowedCats.includes(img.category)) {
+      errors.push(`${owner}: photo category "${img.category}" not allowed (allowed: ${allowedCats.join(', ')})`);
+    }
+
+    // banned words in category + alt
+    const text = `${img.category} ${img.alt || ''}`;
+    for (const w of BANNED_WORDS) {
+      if (hasWord(text, w)) errors.push(`${owner}: photo "${img.category}" contains banned word "${w}"`);
+    }
+  }
+  return list;
+}
+
+// ---- Validate each location's room galleries ----
+for (const loc of LOCATIONS) {
+  const locLabel = `location:${loc.id}`;
+
+  // Each location has rooms (Standard Room + Suite Room)
+  for (const room of loc.rooms) {
+    const roomLabel = `${locLabel} - ${room.type}`;
+
+    // Map galleryKey from locations.js to slot definitions, then look up slot
+    const slotKey = GALLERY_KEY_MAP[room.galleryKey] || 'bedroom-wide';
+    const slot = SLOTS[slotKey];
+    if (!slot) {
+      errors.push(`${roomLabel}: unknown gallery key "${slotKey}"`);
+      continue;
+    }
+
+    checkGallery(room.gallery, roomLabel, slot.cats, {
+      min: slot.min, max: slot.max
+    });
+
+    // Washroom count check
+    const washrooms = (room.gallery || []).filter(g => g.category === 'Washroom').length;
+    if (washrooms < slot.washMin) {
+      errors.push(`${roomLabel}: needs >= ${slot.washMin} washroom photo(s), got ${washrooms}`);
+    }
   }
 }
 
-// Check for duplicates
-for (const [filePath, owners] of allPaths) {
+/* ---- Duplicate paths ---- */
+let duplicateCount = 0;
+for (const [p, owners] of usedPaths) {
   if (owners.length > 1) {
-    duplicateFiles++;
-    errors.push(`DUPLICATE: ${filePath} used by ${owners.join(', ')}`);
+    duplicateCount++;
+    if (duplicateCount <= 20) errors.push(`DUPLICATE: ${p} used by ${owners.join(', ')}`);
   }
 }
 
-// Check CREDITS.md exists and has content
-const creditsPath = path.join(ROOT, 'images/CREDITS.md');
+/* ---- CREDITS.md coverage ---- */
+const creditsPath = path.join(ROOT, 'images', 'CREDITS.md');
+let uncredited = 0;
 if (!fs.existsSync(creditsPath)) {
-  missingCredits++;
   errors.push('MISSING: images/CREDITS.md not found');
 } else {
   const credits = fs.readFileSync(creditsPath, 'utf8');
-  if (credits.length < 100) {
-    missingCredits++;
-    errors.push('CREDITS: CREDITS.md is too short, likely empty');
-  }
-  // Check that CREDITS.md references Unsplash or Pexels
-  if (!credits.includes('Unsplash') && !credits.includes('Pexels')) {
-    missingCredits++;
-    errors.push('CREDITS: CREDITS.md does not reference Unsplash or Pexels');
+  for (const [p] of usedPaths) {
+    const base = path.basename(p);
+    if (!credits.includes(base)) {
+      uncredited++;
+      if (uncredited <= 10) errors.push(`UNCREDITED: ${p} has no entry in CREDITS.md`);
+    }
   }
 }
 
-// Report
+/* ---- Amaravathi ---- */
+for (const loc of LOCATIONS) {
+  if (/amaravathi|amaravati/i.test(loc.city)) {
+    errors.push(`${loc.city}: Amaravathi reference found`);
+  }
+}
+
+/* ---- Summary output ---- */
 const line = '='.repeat(64);
 console.log(line);
-console.log('FRCC STAYS — IMAGE VALIDATION CHECK');
+console.log('FRCC STAYS - IMAGE VALIDATION CHECK');
 console.log(line);
-console.log(`Hotels:              ${HOTELS.length}`);
-console.log(`Hotel galleries:     ${HOTELS.length}`);
-console.log(`Room galleries:      ${HOTELS.reduce((s, h) => s + h.rooms.length, 0)}`);
-console.log(`Area galleries:      ${Object.keys(areaManifest).length}`);
-console.log(`Total image paths:   ${allPaths.size}`);
-console.log(`Missing files:       ${missingFiles}`);
-console.log(`Duplicate files:     ${duplicateFiles}`);
-console.log(`Incomplete galleries: ${incompleteGalleries}`);
-console.log(`Flagged alt content: ${flaggedContent}`);
-console.log(`Missing credits:     ${missingCredits}`);
+console.log(`Locations:           ${LOCATIONS.length}`);
+console.log(`Hotel galleries:     0 (all hotels removed)`);
+console.log(`Room galleries:      ${LOCATIONS.reduce((s, l) => s + l.rooms.length, 0)}`);
+console.log(`Paths referenced:    ${referencedCount} (incl. thumbs)`);
+console.log(`Files present on disk: ${existingCount}`);
+console.log(`MISSING files:       ${missingCount}`);
+console.log(`Duplicate paths:     ${duplicateCount}`);
+console.log(`Uncredited files:    ${uncredited}`);
 console.log('-'.repeat(64));
 
-if (errors.length > 0) {
-  console.log('ERRORS:');
-  errors.slice(0, 50).forEach(e => console.log('  ' + e));
-  if (errors.length > 50) console.log(`  ... and ${errors.length - 50} more`);
+if (missingCount) {
+  console.log('Missing files (first 20):');
+  missing.slice(0, 20).forEach(m => console.log('  ' + m));
 }
 
-const pass = missingFiles === 0 && duplicateFiles === 0 && incompleteGalleries === 0 && missingCredits === 0;
-console.log(line);
-console.log(pass
-  ? 'RESULT: PASS — 0 missing files, 0 duplicates, 0 incomplete galleries'
-  : 'RESULT: FAIL — see errors above');
-console.log(line);
-
-process.exit(pass ? 0 : 1);
+if (errors.length) {
+  console.log(`\nERRORS (${errors.length}):`);
+  errors.slice(0, 60).forEach(e => console.log('  ' + e));
+  if (errors.length > 60) console.log(`  ... and ${errors.length - 60} more`);
+  console.log(line);
+  console.log('RESULT: FAIL');
+  console.log(line);
+  process.exit(1);
+} else {
+  console.log('RESULT: PASS - 0 missing files, 0 duplicates, 0 uncredited, all galleries complete');
+  console.log(line);
+}

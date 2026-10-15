@@ -5,6 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    host: true
+    host: true,
+    watch: {
+      // Exclude zip archives and any locked/binary files from the watcher
+      ignored: ['**/*.zip', '**/*.rar', '**/*.tar', '**/*.gz']
+    }
   }
 });

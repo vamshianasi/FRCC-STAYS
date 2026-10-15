@@ -1,0 +1,13 @@
+<!-- frcc-emblem.svg: Circular emblem only - navy ring with gold film reel, dome, waves -->
+<!-- The "FRCC" text and tagline are live text beside the emblem, not part of this SVG -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Navy ring background -->
+  <circle cx="512" cy="512" r="480" fill="#0B1A33"/>
+  <!-- Gold film reel segments -->
+  <path d="M450 300c-5 0-8 3-8 8v40c0 5 3 8 8 8h12c5 0 8-3 8-8v-40c0-5-3-8-8-8z" fill="#D4AF37"/>
+  <path d="M574 300c0-5-3-8-8-8h-8c-5 0-8 3-8 8v40c0 5 3 8 8 8h8c5 0 8-3 8-8v-40z" fill="#D4AF37"/>
+  <!-- Dome -->
+  <path d="M512 220c-55 0-102 32-132 80V420c0 55 37 102 84 102s84-47 84-102V300z" fill="#D4AF37"/>
+  <!-- Waves in center (black center of the badge) -->
+  <path d="M512 580c80 0 146-66 146-146S592 392 512 392 368 456 368 512 432 580 512 580z" fill="#0B1A33"/>
+</svg>

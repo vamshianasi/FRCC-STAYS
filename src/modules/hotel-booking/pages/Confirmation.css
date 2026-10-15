@@ -57,15 +57,67 @@
 .ci-row span:first-child { color: var(--muted); font-size: 14px; }
 .ci-row span:last-child { font-weight: 600; color: var(--navy); text-align: right; }
 .cancel-section { background: var(--white); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 24px; }
-.cancel-btn {
-  width: 100%;
-  height: 56px;
-  font-size: 15px;
-  font-weight: 600;
-}
-.cancel-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .cancel-deadline { text-align: center; margin-top: 10px; font-size: 13.5px; color: var(--muted); }
-.cancel-blocked { text-align: center; margin-top: 10px; color: var(--danger); font-size: 13.5px; font-weight: 500; }
+
+/* Receipt delivery status + actions */
+.confirm-receipt-bar {
+  margin: 0 auto 24px;
+  max-width: 720px;
+  text-align: center;
+}
+.wa-status {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: var(--radius-chip);
+}
+.wa-status--sending { background: rgba(11, 26, 51, 0.06); color: var(--navy); }
+.wa-status--sent { background: rgba(31, 122, 78, 0.1); color: var(--success); }
+.wa-status--failed { background: rgba(199, 62, 62, 0.1); color: var(--danger); }
+.wa-resend {
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 13.5px;
+  text-decoration: underline;
+  padding: 0 4px;
+}
+/* One row, three equal-height buttons. They stack full width on phones. */
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: stretch;
+  margin-top: 18px;
+}
+.cancel-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #6B7385;
+}
+.cancelled-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 56px;
+  padding: 0 24px;
+  border-radius: 14px;
+  background: #C0392B;
+  color: #fff;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.confirm-last-sent { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+
+@media (max-width: 560px) {
+  .confirm-actions { flex-direction: column; }
+  .confirm-actions > * { width: 100%; }
+}
 
 @media (max-width: 1000px) {
   .confirm-layout { grid-template-columns: 1fr; }
